@@ -37,6 +37,8 @@
 #include "capture_bluefox2.h"
 #endif
 
+#include "capture_basler.h"
+
 /*!
   \class   CaptureThread
   \brief   A thread for capturing and processing video data
@@ -54,6 +56,7 @@ protected:
   CaptureInterface * captureDC1394;
   CaptureInterface * captureV4L;
   CaptureInterface * captureBlueFox2;
+  CaptureInterface * captureBasler;
   CaptureInterface * captureFiles;
   CaptureInterface * captureGenerator;
   AffinityManager * affinity;
@@ -64,6 +67,7 @@ protected:
   VarList * dc1394;
   VarList * v4l;
   VarList * bluefox2;
+  VarList * basler;
   VarList * generator;
   VarList * fromfile;
   VarList * control;

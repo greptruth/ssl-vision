@@ -17,6 +17,7 @@ set (SHARED_SRCS
 	${shared_dir}/capture/capturev4l.cpp
 	${shared_dir}/capture/capturefromfile.cpp
 	${shared_dir}/capture/capture_generator.cpp
+	${shared_dir}/capture/capture_basler.cpp
 	${shared_dir}/capture/captureinterface.cpp
 
 	${shared_dir}/cmpattern/cmpattern_pattern.cpp
@@ -104,6 +105,7 @@ set (SHARED_HEADERS
 	${shared_dir}/capture/capturev4l.h
 	${shared_dir}/capture/capturefromfile.h
   ${shared_dir}/capture/capture_generator.h
+  	${shared_dir}/capture/capture_basler.h
 
 	${shared_dir}/cmpattern/cmpattern_team.h
 	${shared_dir}/cmpattern/cmpattern_teamdetector.h

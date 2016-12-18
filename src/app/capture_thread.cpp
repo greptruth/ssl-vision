@@ -64,7 +64,11 @@ CaptureThread::CaptureThread(int cam_id)
   settings->addChild( (VarType*) (bluefox2 = new VarList("BlueFox2")));
   captureBlueFox2 = new CaptureBlueFox2(bluefox2,camId);
 #endif
-  
+  //Basler
+  captureModule->addItem("Basler");
+  settings->addChild( (VarType*) (basler = new VarList("Basler")));
+  captureBasler = new CaptureBasler(basler, camId);
+
   selectCaptureMethod();
   _kill =false;
   rb=0;
