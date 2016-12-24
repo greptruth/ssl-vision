@@ -10,58 +10,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-#basler
-include_directories(
-	$ENV{PYLON_ROOT}/include 
-	$ENV{PYLON_GENICAM_ROOT}/library/CPP/include
-)
-link_directories(
-	$ENV{PYLON_ROOT}/lib
-	$ENV{PYLON_GENICAM_ROOT}/library/CPP/lib/Linux32_i86
-	$ENV{PYLON_GENICAM_ROOT}/bin/Linux32_i86
-	$ENV{PYLON_GENICAM_ROOT}/bin/Linux32_i86/GenApi/Generic
-)
-
-set(PYLON_INCLUDE
-    $ENV{PYLON_ROOT}/include/ 
-    $ENV{GENICAM_ROOT_V2_3}/library/CPP/include/
-)
-
-set(PYLON_LIBS
-    $ENV{PYLON_ROOT}/lib/libpylonbase.so
-    $ENV{PYLON_ROOT}/lib/libpylonutility.so
-    $ENV{PYLON_ROOT}/lib/libXerces-C_gcc40_v2_7.so
-    $ENV{PYLON_ROOT}/lib64/pylon/tl/pyloncamemu.so
-    $ENV{GENICAM_ROOT_V2_3}/bin/Linux32_i86/libGCBase_gcc40_v2_3.so
-    $ENV{GENICAM_ROOT_V2_3}/bin/Linux32_i86/libGenApi_gcc40_v2_3.so
-    $ENV{GENICAM_ROOT_V2_3}/bin/Linux32_i86/libMathParser_gcc40_v2_3.so
-    $ENV{GENICAM_ROOT_V2_3}/bin/Linux32_i86/libLog_gcc40_v2_3.so
-    $ENV{GENICAM_ROOT_V2_3}/bin/Linux32_i86/liblog4cpp_gcc40_v2_3.so
-)
-#/opt/pylon4/genicam/bin/Linux32_i86
-# handle the QUIETLY and REQUIRED arguments and set PYLON_FOUND to TRUE if
-# all listed variables are TRUE
-
-#FIND_PACKAGE_HANDLE_STANDARD_ARGS(PYLON REQUIRED_VARS PYLON_INCLUDE PYLON_LIBS)
-find_library(BASLER_LIBS libpylonbase.so
-						 libGenApi_gcc40_v2_3.so
-						 libGCBase_gcc40_v2_3.so 
-						 libLog_gcc40_v2_3.so 
-						 libMathParser_gcc40_v2_3.so 
-						 libXerces-C_gcc40_v2_7_1.so 
-						 liblog4cpp_gcc40_v2_3.so
-						 PATHS $ENV{PYLON_ROOT}/lib 
-						 	   $ENV{PYLON_GENICAM_ROOT}/bin/Linux32_i86
-						 	   #$ENV{PYLON_GENICAM_ROOT}/bin/Linux32_i86/GenApi/Generic
-
-)
-if(PYLON_FOUND)
-  set( PYLON_INCLUDE_DIRS ${PYLON_INCLUDE} )
-  set( PYLON_LIBRARIES ${PYLON_LIBS} )
-  message(WARNING "PYLON found fdjfh $ENV{PYLON_ROOT} $ENV{GENICAM_ROOT_V2_3} ${BASLER_LIBS}")
-else()
-  message(WARNING "PYLON NOT found fdjfh $ENV{PYLON_ROOT} $ENV{GENICAM_ROOT_V2_3} ${BASLER_LIBS}")
-endif()
 
 # Find third-party libraries
 find_package(OpenGL REQUIRED)
@@ -86,6 +34,24 @@ include_directories(
 )
 
 include ( ${QT_USE_FILE} )
+
+#Pylon
+FIND_PACKAGE(BaslerPylon)
+
+IF(BASLER_PYLON_FOUND)
+  FIND_PACKAGE(GenICam)
+  IF(GENICAM_FOUND)
+  	message(STATUS "Basler and Genicam found" ${GENICAM_INCLUDE_PATH} ${GENICAM_LIBRARY})
+  	include_directories(${BASLER_PYLON_INCLUDE_PATH} ${GENICAM_INCLUDE_PATH})
+  	add_definitions(-D BASLER_PYLON)
+  	set (SHARED_SRCS ${SHARED_SRCS} ${shared_dir}/capture/capture_basler.cpp)
+  	set (SHARED_HEADERS ${SHARED_HEADERS} ${shared_dir}/capture/capture_basler.h)
+    #set(all_backends ${all_backends} basler_pylon)
+  ELSE(GENICAM_FOUND)
+    message(STATUS "Basler found, but GenICam not found?!")
+  ENDIF(GENICAM_FOUND)
+ENDIF(BASLER_PYLON_FOUND)
+
 
 find_package(mvIMPACT QUIET)
 
@@ -258,11 +224,22 @@ set (libs ${QT_LIBRARIES}
 	${DC1394_LIBRARIES}
 	${mvIMPACT_LIBRARIES}
 	${OpenCV_LIBS}
-	${BASLER_LIBS}
-	${PYLON_LIBS}
+	#${BASLER_PYLON_LIBRARIES}
+	#${GENICAM_LIBRARIES}
 	sslvision
 )
-
+set (slibs ${QT_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${OPENGL_gl_LIBRARY}
+	${OPENGL_glu_LIBRARY}
+	${PROTOBUF_LIBRARIES}
+	${DC1394_LIBRARIES}
+	${mvIMPACT_LIBRARIES}
+	${OpenCV_LIBS}
+	${BASLER_PYLON_LIBRARIES}
+	${GENICAM_LIBRARIES}
+	sslvision
+)
 ## build the main app
 set (target vision)
 add_executable(${target} ${UI_SRCS} ${MOC_SRCS} ${RC_SRCS} ${SRCS})
