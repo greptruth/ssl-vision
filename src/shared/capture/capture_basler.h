@@ -127,25 +127,36 @@ class CaptureBasler : public CaptureInterface
     // is initialized during the lifetime of this object.
     Pylon::PylonAutoInitTerm                autoInitTerm;
 
-    // uint8_t*                                ppBuffersUC[nbBuffers];         // Buffer for the grabbed images in 8 bits format.
-    // uint16_t*                               ppBuffersUS[nbBuffers];         // Buffer for the grabbed images in 16 bits format.
-    // StreamBufferHandle                      handles[nbBuffers];
-    // CTlFactory                              *pTlFactory;
-    // ITransportLayer                         *pTl;                    // Pointer on the transport layer.
-    // CBaslerGigECamera                       *pCamera;                       // Pointer on basler camera.
-    // CBaslerGigECamera::StreamGrabber_t      *pStreamGrabber;
-    // DeviceInfoList_t                        devices;
-    // // GrabResult                              result;
-    // bool                                    connectionStatus;
-    // int                                     mFrameCounter;
-    // //Camera.h
-    // bool                mExposureAvailable;
-    // bool                mGainAvailable;
-    // bool                mCamSizeToMax;
-    // int                 mCamSizeWidth;
-    // int                 mCamSizeHeight;
-    // bool                mVerbose;
-  
+    uint8_t*                                ppBuffersUC[nbBuffers];         // Buffer for the grabbed images in 8 bits format.
+    uint16_t*                               ppBuffersUS[nbBuffers];         // Buffer for the grabbed images in 16 bits format.
+    StreamBufferHandle                      handles[nbBuffers];
+    CTlFactory                              *pTlFactory;
+    ITransportLayer                         *pTl;                    // Pointer on the transport layer.
+    CInstantCamera                          *pCamera;                       // Pointer on basler camera.
+    CBaslerGigECamera::StreamGrabber_t      *pStreamGrabber;
+    DeviceInfoList_t                        devices;
+    IPylonDevice                            *pDevice;
+    // //GrabResult                              result;
+    bool                                    connectionStatus;
+    int                                     mFrameCounter;
+    //Camera.h
+    bool                mExposureAvailable;
+    bool                mGainAvailable;
+    bool                mCamSizeToMax;
+    int                 mCamSizeWidth;
+    int                 mCamSizeHeight;
+    bool                mVerbose;
+
+    INodeMap              *pControl;// = camera.GetNodeMap();
+    // Get the parameters for setting the image area of interest (Image AOI).
+    CIntegerPtr           width;// = control.GetNode("Width");
+    CIntegerPtr           height;// = control.GetNode("Height");
+    CIntegerPtr           offsetX;// = control.GetNode("OffsetX");
+    CIntegerPtr           offsetY;// = control.GetNode("OffsetY");
+    CEnumerationPtr       pixelFormat;
+    CEnumerationPtr       gainAuto;
+
+    unsigned int cam_id;
 public:
   #ifndef VDATA_NO_QT
     CaptureBasler(VarList * _settings, int default_camera_id=0, QObject * parent=0);

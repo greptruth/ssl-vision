@@ -41,6 +41,8 @@ FIND_PACKAGE(BaslerPylon)
 IF(BASLER_PYLON_FOUND)
   FIND_PACKAGE(GenICam)
   IF(GENICAM_FOUND)
+  	set(BASLER_PYLON_CXX_FLAGS -DPylon_ENABLED -DUSE_GIGE)
+  	set(BASLER_PYLON_LINKER_FLAGS "-Wl,-E")
   	message(STATUS "Basler and Genicam found" ${GENICAM_INCLUDE_PATH} ${GENICAM_LIBRARY})
   	include_directories(${BASLER_PYLON_INCLUDE_PATH} ${GENICAM_INCLUDE_PATH})
   	add_definitions(-D BASLER_PYLON)
@@ -51,7 +53,26 @@ IF(BASLER_PYLON_FOUND)
     message(STATUS "Basler found, but GenICam not found?!")
   ENDIF(GENICAM_FOUND)
 ENDIF(BASLER_PYLON_FOUND)
+FIND_LIBRARY(BASLER_PYLON2_LIBRARY GCBase_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
 
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON2 DEFAULT_MSG
+                                             GENICAM_INCLUDE_PATH
+                                             BASLER_PYLON2_LIBRARY)
+FIND_LIBRARY(BASLER_PYLON3_LIBRARY Log_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
+
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON3 DEFAULT_MSG
+                                             GENICAM_INCLUDE_PATH
+                                             BASLER_PYLON3_LIBRARY)
+FIND_LIBRARY(BASLER_PYLON4_LIBRARY MathParser_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
+
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON4 DEFAULT_MSG
+                                             GENICAM_INCLUDE_PATH
+                                             BASLER_PYLON4_LIBRARY)
+FIND_LIBRARY(BASLER_PYLON5_LIBRARY log4cpp_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
+
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON5 DEFAULT_MSG
+                                             GENICAM_INCLUDE_PATH
+                                             BASLER_PYLON5_LIBRARY)
 
 find_package(mvIMPACT QUIET)
 
@@ -224,8 +245,12 @@ set (libs ${QT_LIBRARIES}
 	${DC1394_LIBRARIES}
 	${mvIMPACT_LIBRARIES}
 	${OpenCV_LIBS}
-	${BASLER_PYLON_LIBRARY}
 	${GENICAM_LIBRARY}
+	${BASLER_PYLON_LIBRARY}
+	${BASLER_PYLON2_LIBRARY}
+	${BASLER_PYLON3_LIBRARY}
+	${BASLER_PYLON4_LIBRARY}
+	${BASLER_PYLON5_LIBRARY}
 	sslvision
 )
 

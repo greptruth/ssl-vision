@@ -69,19 +69,19 @@ CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id) : Cap
   // dcam_parameters->addChild(v_sharpen);
   // dcam_parameters->addChild(v_gamma);
   // dcam_parameters->addChild(v_color_twist_mode);
-
+  Pylon::PylonAutoInitTerm                autoInitTerm;
   //Camera
-  // pCamera = NULL;
-  // pStreamGrabber = NULL;
-  // connectionStatus = false;
-  // mFrameCounter = 0;
-  // mExposureAvailable = true;
-  // mGainAvailable = true;
+  pCamera = NULL;
+  pStreamGrabber = NULL;
+  connectionStatus = false;
+  mFrameCounter = 0;
+  mExposureAvailable = true;
+  mGainAvailable = true;
 
-  // // Enumerate GigE cameras
-  // pTlFactory = &CTlFactory::GetInstance();
-  // pTl = pTlFactory->CreateTl(CBaslerGigECamera ::DeviceClass());
-  // pTl->EnumerateDevices(devices);
+  // //Enumerate GigE cameras
+  pTlFactory = &CTlFactory::GetInstance();
+  pTl = pTlFactory->CreateTl(CBaslerGigECamera ::DeviceClass());
+  pTl->EnumerateDevices(devices);
   //~Camera  
   
 
@@ -94,463 +94,463 @@ CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id) : Cap
   
 }
 
-// CaptureBasler::getCamerasList() {
+  // CaptureBasler::getCamerasList() {
 
-//   vector<pair<int,string>> camerasList;
+  //   vector<pair<int,string>> camerasList;
 
-//   try {
+  //   try {
 
-//       int id = 0;
-//       if(!devices.empty()) {
-//           DeviceInfoList_t::const_iterator it;
-//           for(it = devices.begin(); it != devices.end(); ++it ) {
-//               if(!devices.empty()){
-//                   if(devices[id].GetFullName().find_first_of("Basler")==0||devices[id].GetFullName().find_first_of("Prosilica")==0) {
-//                       pair<int,string> c;
-//                       c.first = id;
-//                       c.second = "NAME[" + devices[id].GetModelName() + "] S/N[" + devices[id].GetSerialNumber() + "] SDK[PYLON]";
-//                       camerasList.push_back(c);
-//                   }
-//               }
-//               id++;
-//           }
-//       }
+  //       int id = 0;
+  //       if(!devices.empty()) {
+  //           DeviceInfoList_t::const_iterator it;
+  //           for(it = devices.begin(); it != devices.end(); ++it ) {
+  //               if(!devices.empty()){
+  //                   if(devices[id].GetFullName().find_first_of("Basler")==0||devices[id].GetFullName().find_first_of("Prosilica")==0) {
+  //                       pair<int,string> c;
+  //                       c.first = id;
+  //                       c.second = "NAME[" + devices[id].GetModelName() + "] S/N[" + devices[id].GetSerialNumber() + "] SDK[PYLON]";
+  //                       camerasList.push_back(c);
+  //                   }
+  //               }
+  //               id++;
+  //           }
+  //       }
 
-//   }catch (GenICam::GenericException &e){
+  //   }catch (GenICam::GenericException &e){
 
-//       // BOOST_LOG_SEV(logger,fail) << "An exception occured : " << e.GetDescription() ;
-//       cout << "An exception occured : " << e.GetDescription() << endl;
+  //       // BOOST_LOG_SEV(logger,fail) << "An exception occured : " << e.GetDescription() ;
+  //       cout << "An exception occured : " << e.GetDescription() << endl;
 
-//   }
+  //   }
 
-//   return camerasList;
+  //   return camerasList;
 
-// }
+  // }
 
-// CaptureBasler::listCameras() {
+  // CaptureBasler::listCameras() {
 
-//     try {
+  //     try {
 
-//         cout << endl << "------------ GIGE CAMERAS WITH PYLON -----------" << endl << endl;
+  //         cout << endl << "------------ GIGE CAMERAS WITH PYLON -----------" << endl << endl;
 
-//         int id = 0;
-//         DeviceInfoList_t::const_iterator it;
+  //         int id = 0;
+  //         DeviceInfoList_t::const_iterator it;
 
-//         for(it = devices.begin(); it != devices.end(); ++it ) {
-//             if(!devices.empty()){
-//                 if(devices[id].GetFullName().find_first_of("Basler")==0||devices[id].GetFullName().find_first_of("Prosilica")==0) {
-//                     cout << "-> ID[" << id << "]  NAME[" << devices[id].GetModelName().c_str() << "]  S/N[" << devices[id].GetSerialNumber().c_str() <<"]"<< endl;
-//                 }
-//             }
-//             id++;
-//         }
+  //         for(it = devices.begin(); it != devices.end(); ++it ) {
+  //             if(!devices.empty()){
+  //                 if(devices[id].GetFullName().find_first_of("Basler")==0||devices[id].GetFullName().find_first_of("Prosilica")==0) {
+  //                     cout << "-> ID[" << id << "]  NAME[" << devices[id].GetModelName().c_str() << "]  S/N[" << devices[id].GetSerialNumber().c_str() <<"]"<< endl;
+  //                 }
+  //             }
+  //             id++;
+  //         }
 
-//         cout << endl << "------------------------------------------------" << endl << endl;
+  //         cout << endl << "------------------------------------------------" << endl << endl;
 
-//     }catch (GenICam::GenericException &e){
+  //     }catch (GenICam::GenericException &e){
 
-//         // BOOST_LOG_SEV(logger,fail) << "An exception occured : " << e.GetDescription() ;
-//         cout << "An exception occured : " << e.GetDescription() << endl;
-//         return false;
-//     }
+  //         // BOOST_LOG_SEV(logger,fail) << "An exception occured : " << e.GetDescription() ;
+  //         cout << "An exception occured : " << e.GetDescription() << endl;
+  //         return false;
+  //     }
 
-//     return true;
+  //     return true;
 
-// }
-// CaptureBasler::createDevice(int id){
+  // }
+  // CaptureBasler::createDevice(int id){
 
-//     try {
+  //     try {
 
-//         if(!devices.empty()) {
+  //         if(!devices.empty()) {
 
-//             // Create a camera object
-//             if(id >= 0 && id < devices.size()){
-//                 pCamera = new CBaslerGigECamera( pTl->CreateDevice((devices[id]) ));
-//             }else {
-//                 return false;
-//             }
+  //             // Create a camera object
+  //             if(id >= 0 && id < devices.size()){
+  //                 pCamera = new CBaslerGigECamera( pTl->CreateDevice((devices[id]) ));
+  //             }else {
+  //                 return false;
+  //             }
 
-//             // Open the camera object
-//             pCamera->Open();
+  //             // Open the camera object
+  //             pCamera->Open();
 
-//             if(pCamera->IsOpen())
-//                 cout << endl << "Success to open the device." << endl << endl;
-//                 // BOOST_LOG_SEV(logger,notification) << "Success to open the device.";
+  //             if(pCamera->IsOpen())
+  //                 cout << endl << "Success to open the device." << endl << endl;
+  //                 // BOOST_LOG_SEV(logger,notification) << "Success to open the device.";
 
-//             return true;
-//         }
+  //             return true;
+  //         }
 
-//     }catch (GenICam::GenericException &e){
+  //     }catch (GenICam::GenericException &e){
 
-//         std::cout << e.GetDescription() << endl;
-//         return false;
-//     }
+  //         std::cout << e.GetDescription() << endl;
+  //         return false;
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
-// CaptureBasler::getDeviceNameById(int id, string &device) {
+  // }
+  // CaptureBasler::getDeviceNameById(int id, string &device) {
 
-//     if(!devices.empty()) {
-//         cout << " Camera (ID:" << id << ") detected " << endl;
-//         cout << " Name :        " << devices[id].GetModelName().c_str() << endl;
-//         return true;
-//     }
+  //     if(!devices.empty()) {
+  //         cout << " Camera (ID:" << id << ") detected " << endl;
+  //         cout << " Name :        " << devices[id].GetModelName().c_str() << endl;
+  //         return true;
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
+  // }
 
-// CaptureBasler::grabInitialization(){
+  // CaptureBasler::grabInitialization(){
 
-//     if(pCamera){
+  //     if(pCamera){
 
-//         if(pCamera->IsOpen()){
+  //         if(pCamera->IsOpen()){
 
-//             try{
+  //             try{
 
-//                 //Disable acquisition start trigger if available
-//                 {
-//                     GenApi::IEnumEntry* acquisitionStart = pCamera->TriggerSelector.GetEntry( TriggerSelector_AcquisitionStart);
+  //                 //Disable acquisition start trigger if available
+  //                 {
+  //                     GenApi::IEnumEntry* acquisitionStart = pCamera->TriggerSelector.GetEntry( TriggerSelector_AcquisitionStart);
 
-//                     if ( acquisitionStart && GenApi::IsAvailable( acquisitionStart)){
+  //                     if ( acquisitionStart && GenApi::IsAvailable( acquisitionStart)){
 
-//                         pCamera->TriggerSelector.SetValue( TriggerSelector_AcquisitionStart);
-//                         pCamera->TriggerMode.SetValue( TriggerMode_Off);
+  //                         pCamera->TriggerSelector.SetValue( TriggerSelector_AcquisitionStart);
+  //                         pCamera->TriggerMode.SetValue( TriggerMode_Off);
 
-//                     }
-//                 }
+  //                     }
+  //                 }
 
-//                 //Disable frame start trigger if available
-//                 {
-//                     GenApi::IEnumEntry* frameStart = pCamera->TriggerSelector.GetEntry( TriggerSelector_FrameStart);
+  //                 //Disable frame start trigger if available
+  //                 {
+  //                     GenApi::IEnumEntry* frameStart = pCamera->TriggerSelector.GetEntry( TriggerSelector_FrameStart);
 
-//                     if ( frameStart && GenApi::IsAvailable( frameStart)){
+  //                     if ( frameStart && GenApi::IsAvailable( frameStart)){
 
-//                         pCamera->TriggerSelector.SetValue( TriggerSelector_FrameStart);
-//                         pCamera->TriggerMode.SetValue( TriggerMode_Off);
+  //                         pCamera->TriggerSelector.SetValue( TriggerSelector_FrameStart);
+  //                         pCamera->TriggerMode.SetValue( TriggerMode_Off);
 
-//                     }
-//                 }
+  //                     }
+  //                 }
 
-//                 //Set acquisition mode
-//                 pCamera->AcquisitionMode.SetValue(AcquisitionMode_Continuous);
+  //                 //Set acquisition mode
+  //                 pCamera->AcquisitionMode.SetValue(AcquisitionMode_Continuous);
 
-//                 //Set exposure settings
-//                 pCamera->ExposureMode.SetValue(ExposureMode_Timed);
+  //                 //Set exposure settings
+  //                 pCamera->ExposureMode.SetValue(ExposureMode_Timed);
 
-//                 if (!pStreamGrabber){
+  //                 if (!pStreamGrabber){
 
-//                     pStreamGrabber = new (CBaslerGigECamera::StreamGrabber_t)(pCamera->GetStreamGrabber(0));
+  //                     pStreamGrabber = new (CBaslerGigECamera::StreamGrabber_t)(pCamera->GetStreamGrabber(0));
 
-//                 }
+  //                 }
 
-//                 pStreamGrabber->Open();
+  //                 pStreamGrabber->Open();
 
-//                 // Get the image buffer size
-//                 const size_t ImageSize = (size_t)(pCamera->PayloadSize.GetValue());
+  //                 // Get the image buffer size
+  //                 const size_t ImageSize = (size_t)(pCamera->PayloadSize.GetValue());
 
-//                 // We won't use image buffers greater than ImageSize
-//                 pStreamGrabber->MaxBufferSize.SetValue(ImageSize);
+  //                 // We won't use image buffers greater than ImageSize
+  //                 pStreamGrabber->MaxBufferSize.SetValue(ImageSize);
 
-//                 // We won't queue more than nbBuffers image buffers at a time
-//                 pStreamGrabber->MaxNumBuffer.SetValue(nbBuffers);
+  //                 // We won't queue more than nbBuffers image buffers at a time
+  //                 pStreamGrabber->MaxNumBuffer.SetValue(nbBuffers);
 
-//                 pStreamGrabber->PrepareGrab();
+  //                 pStreamGrabber->PrepareGrab();
 
-//                 for (int i = 0; i < nbBuffers; ++i){
+  //                 for (int i = 0; i < nbBuffers; ++i){
 
-//                     //ppBuffers[i] = new unsigned char[ImageSize];
-//                     if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono8){
+  //                     //ppBuffers[i] = new unsigned char[ImageSize];
+  //                     if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono8){
 
-//                         ppBuffersUC[i] = new uint8_t[ImageSize];
-//                         handles[i] = pStreamGrabber->RegisterBuffer(ppBuffersUC[i], ImageSize);
+  //                         ppBuffersUC[i] = new uint8_t[ImageSize];
+  //                         handles[i] = pStreamGrabber->RegisterBuffer(ppBuffersUC[i], ImageSize);
 
-//                     }
+  //                     }
 
-//                     if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono12){
+  //                     if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono12){
 
-//                         ppBuffersUS[i] = new uint16_t[ImageSize];
-//                         handles[i] = pStreamGrabber->RegisterBuffer(ppBuffersUS[i], ImageSize);
+  //                         ppBuffersUS[i] = new uint16_t[ImageSize];
+  //                         handles[i] = pStreamGrabber->RegisterBuffer(ppBuffersUS[i], ImageSize);
 
-//                     }
+  //                     }
 
-//                     pStreamGrabber->QueueBuffer(handles[i], NULL);
-//                 }
+  //                     pStreamGrabber->QueueBuffer(handles[i], NULL);
+  //                 }
 
-//                 return true;
+  //                 return true;
 
-//             }catch (GenICam::GenericException &e){
+  //             }catch (GenICam::GenericException &e){
 
-//                 // Error handling.
-//                 // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
-//                 cout << "An exception occurred." << e.GetDescription() << endl;
-//                 return false;
+  //                 // Error handling.
+  //                 // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
+  //                 cout << "An exception occurred." << e.GetDescription() << endl;
+  //                 return false;
 
-//             }
+  //             }
 
 
-//         }
-//     }
+  //         }
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
+  // }
 
-// CaptureBasler::getAvailablePixelFormats() {
+  // CaptureBasler::getAvailablePixelFormats() {
 
-//     vector<string> pixfmt;
+  //     vector<string> pixfmt;
 
-//     if(pCamera != NULL) {
+  //     if(pCamera != NULL) {
 
-//         if(pCamera->IsOpen()) {
+  //         if(pCamera->IsOpen()) {
 
-//             INodeMap *nodemap = pCamera->GetNodeMap();
-//             // Access the PixelFormat enumeration type node.
-//             CEnumerationPtr pixelFormat( nodemap->GetNode( "PixelFormat"));
-//             // Check if the pixel format Mono8 is available.
-//             if(IsAvailable(pixelFormat->GetEntryByName( "Mono8")))
-//                 pixfmt.push_back("MONO8");
+  //             INodeMap *nodemap = pCamera->GetNodeMap();
+  //             // Access the PixelFormat enumeration type node.
+  //             CEnumerationPtr pixelFormat( nodemap->GetNode( "PixelFormat"));
+  //             // Check if the pixel format Mono8 is available.
+  //             if(IsAvailable(pixelFormat->GetEntryByName( "Mono8")))
+  //                 pixfmt.push_back("MONO8");
 
-//             // Check if the pixel format Mono12 is available.
-//             if(IsAvailable(pixelFormat->GetEntryByName( "Mono12")))
-//                 pixfmt.push_back("MONO12");
+  //             // Check if the pixel format Mono12 is available.
+  //             if(IsAvailable(pixelFormat->GetEntryByName( "Mono12")))
+  //                 pixfmt.push_back("MONO12");
 
-//             std::cout << endl <<  ">> Available pixel formats :" << endl;
-//             EParser<CamPixFmt> fmt;
+  //             std::cout << endl <<  ">> Available pixel formats :" << endl;
+  //             EParser<CamPixFmt> fmt;
 
-//             for( int i = 0; i != pixfmt.size(); i++ ) {
-//                 if(fmt.isEnumValue(pixfmt.at(i))) {
-//                     std::cout << "- " << pixfmt.at(i) << " available --> ID : " << fmt.parseEnum(pixfmt.at(i)) << endl;
-//                 }
-//             }
-//         }
-//     }
-// }
+  //             for( int i = 0; i != pixfmt.size(); i++ ) {
+  //                 if(fmt.isEnumValue(pixfmt.at(i))) {
+  //                     std::cout << "- " << pixfmt.at(i) << " available --> ID : " << fmt.parseEnum(pixfmt.at(i)) << endl;
+  //                 }
+  //             }
+  //         }
+  //     }
+  // }
 
-// CaptureBasler::getExposureBounds(double &eMin, double &eMax){
+  // CaptureBasler::getExposureBounds(double &eMin, double &eMax){
 
-//     INodeMap *nodemap = pCamera->GetNodeMap();
+  //     INodeMap *nodemap = pCamera->GetNodeMap();
 
-//     CIntegerPtr exposureTimeRaw(nodemap->GetNode("ExposureTimeRaw"));
+  //     CIntegerPtr exposureTimeRaw(nodemap->GetNode("ExposureTimeRaw"));
 
-//     if(exposureTimeRaw.IsValid()) {
+  //     if(exposureTimeRaw.IsValid()) {
 
-//             eMin = exposureTimeRaw->GetMin();
-//             eMax = exposureTimeRaw->GetMax();
+  //             eMin = exposureTimeRaw->GetMin();
+  //             eMax = exposureTimeRaw->GetMax();
 
-//     }
+  //     }
 
-// }
+  // }
 
-// CaptureBasler::getGainBounds(int &gMin, int &gMax){
+  // CaptureBasler::getGainBounds(int &gMin, int &gMax){
 
-//     INodeMap *nodemap = pCamera->GetNodeMap();
+  //     INodeMap *nodemap = pCamera->GetNodeMap();
 
-//     CIntegerPtr gainRaw(nodemap->GetNode("GainRaw"));
+  //     CIntegerPtr gainRaw(nodemap->GetNode("GainRaw"));
 
-//     if(gainRaw.IsValid()) {
+  //     if(gainRaw.IsValid()) {
 
-//             gMin = gainRaw->GetMin();
-//             gMax = gainRaw->GetMax();
+  //             gMin = gainRaw->GetMin();
+  //             gMax = gainRaw->GetMax();
 
-//     }
+  //     }
 
-// }
-// CaptureBasler::getPixelFormat(CamPixFmt &format){
+  // }
+  // CaptureBasler::getPixelFormat(CamPixFmt &format){
 
-//     if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono8){
+  //     if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono8){
 
-//         format = MONO8;
-//         return true;
+  //         format = MONO8;
+  //         return true;
 
-//     }else if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono12){
+  //     }else if(pCamera->PixelFormat.GetValue() == PixelFormat_Mono12){
 
-//         format = MONO12;
+  //         format = MONO12;
 
-//         return true;
+  //         return true;
 
-//     }
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
-// CaptureBasler::getFrameSize(int &w , int &h) {
+  // }
+  // CaptureBasler::getFrameSize(int &w , int &h) {
 
-//     if(pCamera){
+  //     if(pCamera){
 
-//         try{
+  //         try{
 
-//             if (pCamera->IsAttached() && pCamera->IsOpen()){
+  //             if (pCamera->IsAttached() && pCamera->IsOpen()){
 
-//                 w = pCamera->Width.GetValue();
-//                 h = pCamera->Height.GetValue();
+  //                 w = pCamera->Width.GetValue();
+  //                 h = pCamera->Height.GetValue();
 
-//                 return true;
+  //                 return true;
 
-//             }else{
+  //             }else{
 
-//                 BOOST_LOG_SEV(logger,fail) << "Can't access width image. Camera not opened or not attached." << endl;
+  //                 BOOST_LOG_SEV(logger,fail) << "Can't access width image. Camera not opened or not attached." << endl;
 
-//             }
+  //             }
 
-//         }catch (GenICam::GenericException &e){
+  //         }catch (GenICam::GenericException &e){
 
-//             // Error handling
-//             BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
+  //             // Error handling
+  //             BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
 
-//         }
-//     }
+  //         }
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
-// CaptureBasler::getFPS(double &value) {
+  // }
+  // CaptureBasler::getFPS(double &value) {
 
-//     if(pCamera!=NULL) {
-//         value = pCamera->ResultingFrameRateAbs.GetValue();
-//         return true;
-//     }
+  //     if(pCamera!=NULL) {
+  //         value = pCamera->ResultingFrameRateAbs.GetValue();
+  //         return true;
+  //     }
 
-//     value = 0;
-//     return false;
+  //     value = 0;
+  //     return false;
 
-// }
-// CaptureBasler::setExposureTime(double exposition) {
+  // }
+  // CaptureBasler::setExposureTime(double exposition) {
 
-//     if(pCamera){
+  //     if(pCamera){
 
-//         try{
+  //         try{
 
-//             if( pCamera->IsAttached() && pCamera->IsOpen() ){
+  //             if( pCamera->IsAttached() && pCamera->IsOpen() ){
 
-//                 // Check whether auto exposure is available
-//                 if (IsWritable( pCamera->ExposureAuto)){
+  //                 // Check whether auto exposure is available
+  //                 if (IsWritable( pCamera->ExposureAuto)){
 
-//                     // Disable auto exposure.
-//                     cout << "Disable ExposureAuto." << endl;
-//                     pCamera->ExposureAuto.SetValue(ExposureAuto_Off);
+  //                     // Disable auto exposure.
+  //                     cout << "Disable ExposureAuto." << endl;
+  //                     pCamera->ExposureAuto.SetValue(ExposureAuto_Off);
 
-//                 }
+  //                 }
 
-//                 pCamera->ExposureTimeAbs = exposition;
+  //                 pCamera->ExposureTimeAbs = exposition;
 
-//             }else{
+  //             }else{
 
-//                  std::cout << "Camera not opened or not attached" << endl;
-//             }
+  //                  std::cout << "Camera not opened or not attached" << endl;
+  //             }
 
-//             return true;
+  //             return true;
 
-//         }catch (GenICam::GenericException &e){
+  //         }catch (GenICam::GenericException &e){
 
-//             // Error handling
-//             // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
-//             cout << endl << ">> " << e.GetDescription() << endl;
-//             return false;
-//         }
-//     }
+  //             // Error handling
+  //             // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
+  //             cout << endl << ">> " << e.GetDescription() << endl;
+  //             return false;
+  //         }
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
+  // }
 
-// CaptureBasler::setGain(int gain){
+  // CaptureBasler::setGain(int gain){
 
-//     if(pCamera){
-//         try{
+  //     if(pCamera){
+  //         try{
 
-//             if( pCamera->IsAttached() && pCamera->IsOpen() ){
+  //             if( pCamera->IsAttached() && pCamera->IsOpen() ){
 
-//                 // Check whether auto exposure is available
-//                 if (IsWritable( pCamera->GainAuto)){
+  //                 // Check whether auto exposure is available
+  //                 if (IsWritable( pCamera->GainAuto)){
 
-//                     // Disable auto exposure.
-//                     cout << "Disable GainAuto." << endl;
-//                     pCamera->GainAuto.SetValue(GainAuto_Off);
+  //                     // Disable auto exposure.
+  //                     cout << "Disable GainAuto." << endl;
+  //                     pCamera->GainAuto.SetValue(GainAuto_Off);
 
-//                 }
+  //                 }
 
-//                 pCamera->GainRaw = gain;
+  //                 pCamera->GainRaw = gain;
 
-//             }else{
+  //             }else{
 
-//                 // BOOST_LOG_SEV(logger,fail) << "Camera not opened or not attached";
+  //                 // BOOST_LOG_SEV(logger,fail) << "Camera not opened or not attached";
 
-//             }
+  //             }
 
-//             return true;
+  //             return true;
 
-//         }catch (GenICam::GenericException &e){
+  //         }catch (GenICam::GenericException &e){
 
-//             // Error handling
-//             // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
-//             cout << endl << ">> " << e.GetDescription() << endl;
-//             return false;
-//         }
-//     }
+  //             // Error handling
+  //             // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
+  //             cout << endl << ">> " << e.GetDescription() << endl;
+  //             return false;
+  //         }
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
+  // }
 
-// CaptureBasler::setFPS(double fps){
+  // CaptureBasler::setFPS(double fps){
 
-//     pCamera->AcquisitionFrameRateAbs = fps;
-//     return true;
-// }
+  //     pCamera->AcquisitionFrameRateAbs = fps;
+  //     return true;
+  // }
 
-// CaptureBasler::setPixelFormat(CamPixFmt format){
+  // CaptureBasler::setPixelFormat(CamPixFmt format){
 
-//     Basler_GigECamera::PixelFormatEnums fpix;
+  //     Basler_GigECamera::PixelFormatEnums fpix;
 
-//     if(format == MONO8 ){
+  //     if(format == MONO8 ){
 
-//         fpix = PixelFormat_Mono8;
+  //         fpix = PixelFormat_Mono8;
 
-//     }
-//     else if (format == MONO12 ){
+  //     }
+  //     else if (format == MONO12 ){
 
-//         fpix = PixelFormat_Mono12;
+  //         fpix = PixelFormat_Mono12;
 
-//     }
+  //     }
 
-//     if (pCamera){
+  //     if (pCamera){
 
-//         try{
-//             if(pCamera->IsAttached() && pCamera->IsOpen()){
+  //         try{
+  //             if(pCamera->IsAttached() && pCamera->IsOpen()){
 
-//                 pCamera->PixelFormat.SetValue(fpix);
+  //                 pCamera->PixelFormat.SetValue(fpix);
 
-//             }else{
+  //             }else{
 
-//                // BOOST_LOG_SEV(logger,fail) << "Camera not opened or not attached";
+  //                // BOOST_LOG_SEV(logger,fail) << "Camera not opened or not attached";
 
-//             }
-//         }
-//         catch (GenICam::GenericException &e){
+  //             }
+  //         }
+  //         catch (GenICam::GenericException &e){
 
-//             // Error handling
-//             // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
-//             cout << endl << ">> " << e.GetDescription() << endl;
+  //             // Error handling
+  //             // BOOST_LOG_SEV(logger,fail) << "An exception occurred." << e.GetDescription();
+  //             cout << endl << ">> " << e.GetDescription() << endl;
 
-//         }
+  //         }
 
-//         return true;
-//     }
+  //         return true;
+  //     }
 
-//     return false;
+  //     return false;
 
-// }
+  // }
 
-// CaptureBasler::getExposureTime(){
+  // CaptureBasler::getExposureTime(){
 
-//     if(pCamera!=0)
-//          return pCamera->ExposureTimeAbs.GetValue();
-//     else
-//         return 0;
+  //     if(pCamera!=0)
+  //          return pCamera->ExposureTimeAbs.GetValue();
+  //     else
+  //         return 0;
 
-// }
+  // }
 
 #ifndef VDATA_NO_QT
 void CaptureBasler::mvc_connect(VarList * group)
@@ -641,14 +641,167 @@ bool CaptureBasler::startCapture()
   #ifndef VDATA_NO_QT
     mutex.lock();
   #endif
+    cam_id = v_cam_bus->getInt();
+    Pylon::PylonAutoInitTerm                autoInitTerm;
+    // Get the transport layer factory.
+    pTlFactory = &CTlFactory::GetInstance();
 
-  
+    // Get all attached devices and exit application if no device is found.
+    // DeviceInfoList_t devices;
+    if ( pTlFactory->EnumerateDevices(devices) == 0 )
+    {
+        // throw RUNTIME_EXCEPTION( "No camera present.");
+      fprintf(stderr, "BaslerPylon: No device/camera found");
+    }
+    fprintf(stderr, "BaslerPylon: Number of cams: %u\n", devices.size());
+
+    if(cam_id >= devices.size())
+    {
+      fprintf(stderr, "BaslerPylon: Invalid cam_id: %u\n", cam_id);
+
+      #ifndef VDATA_NO_QT
+        mutex.unlock();
+      #endif
+      return false;
+    }
+    pDevice = pTlFactory->CreateDevice( devices[cam_id] );
+    pCamera=new CInstantCamera(pDevice);
+    //TODO: open cam and catch exception here
+    try
+    {
+      pCamera->Open();
+    }
+    catch (GenICam::GenericException &e)
+    {
+        // Error handling.
+      fprintf(stderr, "BaslerPylon: An error occurred while opening the device(error code:  '%s')\n", e.GetDescription());
+      #ifndef VDATA_NO_QT
+        mutex.unlock();
+      #endif
+      return false;
+    }
+    cout << "Using device " << pCamera->GetDeviceInfo().GetFullName() << "for cam_id:"<< cam_id << endl;
+    pCamera->MaxNumBuffer = 5;
+
+    pControl = &pCamera->GetNodeMap();
+    width = pControl->GetNode("Width");
+    height = pControl->GetNode("Height");
+    offsetX = pControl->GetNode("OffsetX");
+    offsetY = pControl->GetNode("OffsetY");
+    pixelFormat = pControl->GetNode( "PixelFormat");
+    // gainAuto( pControl.GetNode( "GainAuto"));
+    // Maximize the Image AOI.
+    if (IsWritable(offsetX))
+    {
+        offsetX->SetValue(offsetX->GetMin());
+    }
+    if (IsWritable(offsetY))
+    {
+        offsetY->SetValue(offsetY->GetMin());
+    }
+    width->SetValue(width->GetMax());
+    height->SetValue(height->GetMax());
+    if ( IsAvailable( pixelFormat->GetEntryByName( "Mono8")))
+    {
+        pixelFormat->FromString( "Mono8");
+        cout << "New PixelFormat  : " << pixelFormat->ToString() << endl;
+    }
+    if ( IsWritable( gainAuto))
+    {
+        gainAuto->FromString("Off");
+    }
+    // FOR: non auto gain setting
+    // if ( camera.GetSfncVersion() >= Sfnc_2_0_0)
+    // {
+    //     // Access the Gain float type node. This node is available for USB camera devices.
+    //     // USB camera devices are compliant to SFNC version 2.0.
+    //     CFloatPtr gain( nodemap.GetNode( "Gain"));
+    //     double newGain = gain->GetMin() + ((gain->GetMax() - gain->GetMin()) / 2);
+    //     gain->SetValue(newGain);
+    //     cout << "Gain (50%)       : " << gain->GetValue() << " (Min: " << gain->GetMin() << "; Max: " << gain->GetMax() << ")" << endl;
+    // }
+    // else
+    // {
+    //     // Access the GainRaw integer type node. This node is available for IIDC 1394 and GigE camera devices.
+    //     CIntegerPtr gainRaw( nodemap.GetNode( "GainRaw"));
+    //     int64_t newGainRaw = gainRaw->GetMin() + ((gainRaw->GetMax() - gainRaw->GetMin()) / 2);
+    //     // Make sure the calculated value is valid.
+    //     newGainRaw = Adjust(newGainRaw, gainRaw->GetMin(), gainRaw->GetMax(), gainRaw->GetInc());
+    //     gainRaw->SetValue(newGainRaw);
+    //     cout << "Gain (50%)       : " << gainRaw->GetValue() << " (Min: " << gainRaw->GetMin() << "; Max: " << gainRaw->GetMax() << "; Inc: " << gainRaw->GetInc() << ")" << endl;
+    // }
+    // Set the pixel data format.
+    // camera.PixelFormat.SetValue(PixelFormat_Mono16)
+
+        // Create an array of instant cameras for the found devices and avoid exceeding a maximum number of devices.
+        // CInstantCameraArray camera;
+
+        // Create and attach all Pylon Devices.
+        // for ( size_t i = 0; i < cameras.GetSize(); ++i)
+        // {
+        //     cameras[ i ].Attach( tlFactory.CreateDevice( devices[ i ]));
+
+        //     // Print the model name of the camera.
+        //     cout << "Using device " << cameras[ i ].GetDeviceInfo().GetModelName() << endl;
+        // }
+
+        // Starts grabbing for all cameras starting with index 0. The grabbing
+        // is started for one camera after the other. That's why the images of all
+        // cameras are not taken at the same time.
+        // However, a hardware trigger setup can be used to cause all cameras to grab images synchronously.
+        // According to their default configuration, the cameras are
+        // set up for free-running continuous acquisition.
+        // cameras.StartGrabbing();
+
+        // This smart pointer will receive the grab result data.
+        // CGrabResultPtr ptrGrabResult;
+
+        // Grab c_countOfImagesToGrab from the cameras.
+//         for( int i = 0; i < c_countOfImagesToGrab && cameras.IsGrabbing(); ++i)
+//         {
+//             cameras.RetrieveResult( 5000, ptrGrabResult, TimeoutHandling_ThrowException);
+
+//             // When the cameras in the array are created the camera context value
+//             // is set to the index of the camera in the array.
+//             // The camera context is a user settable value.
+//             // This value is attached to each grab result and can be used
+//             // to determine the camera that produced the grab result.
+//             intptr_t cameraContextValue = ptrGrabResult->GetCameraContext();
+
+// #ifdef PYLON_WIN_BUILD
+//             // Show the image acquired by each camera in the window related to each camera.
+//             Pylon::DisplayImage(cameraContextValue, ptrGrabResult);
+// #endif
+
+//             // Print the index and the model name of the camera.
+//             cout << "Camera " <<  cameraContextValue << ": " << cameras[ cameraContextValue ].GetDeviceInfo().GetModelName() << endl;
+
+//             // Now, the image data can be processed.
+//             cout << "GrabSucceeded: " << ptrGrabResult->GrabSucceeded() << endl;
+//             cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
+//             cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
+//             const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
+//             cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
+//         }
+//     }
+//     catch (GenICam::GenericException &e)
+//     {
+//         // Error handling
+//         cerr << "An exception occurred." << endl
+//         << e.GetDescription() << endl;
+//         exitCode = 1;
+//     }
+
       
-
   #ifndef VDATA_NO_QT
     mutex.unlock();
   #endif
-    return true;
+    
+  printf("BaslerPylon Info: Restoring Previously Saved Camera Parameters\n");
+  writeAllParameterValues();
+  readAllParameterValues();
+  
+  return true;
 }
 
 bool CaptureBasler::copyAndConvertFrame ( const RawImage & src, RawImage & target )

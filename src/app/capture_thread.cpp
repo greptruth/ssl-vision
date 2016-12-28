@@ -130,6 +130,8 @@ void CaptureThread::selectCaptureMethod() {
     new_capture = captureV4L;
   } else if(captureModule->getString() == "DC 1394") {
     new_capture = captureDC1394;
+  } else if(captureModule->getString() == "Basler") {
+    new_capture = captureBasler;
   }
 
   if (old_capture!=0 && new_capture!=old_capture && old_capture->isCapturing()) {
