@@ -142,16 +142,16 @@ bool UDP::open(int port, bool share_port_for_multicasting, bool multicast_includ
   return(true);
 }
 
-bool UDP::addMulticast(const Address &multiaddr,const Address &interface)
+bool UDP::addMulticast(const Address &multiaddr,const Address &interface_)
 {
   static const bool debug = false;
   struct ip_mreq imreq;
   imreq.imr_multiaddr.s_addr = multiaddr.getInAddr();
-  imreq.imr_interface.s_addr = interface.getInAddr();
+  imreq.imr_interface.s_addr = interface_.getInAddr();
 
   if(debug){
     printf("0x%08X 0x%08X\n",
-           (unsigned)interface.getInAddr(),
+           (unsigned)interface_.getInAddr(),
            (unsigned)INADDR_ANY);
   }
 

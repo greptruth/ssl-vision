@@ -39,11 +39,31 @@
 #    include <pylon/PylonGUI.h>
 #endif
 // Namespace for using pylon objects.
+// #include "Frame.h"
+// #include "TimeDate.h"
+// #include "Conversion.h"
+// #include "SaveImg.h"
+// #include "Camera.h"
+// #include "ECamPixFmt.h"
+// #include "EParser.h"
+// #include <boost/log/common.hpp>
+// #include <boost/log/attributes.hpp>
+// #include <boost/log/sources/logger.hpp>
+// #include <boost/log/core.hpp>
+// #include "ELogSeverityLevel.h"
+
+// #include <pylon/PylonIncludes.h>
+#include <pylon/gige/BaslerGigEInstantCamera.h>
+#include <pylon/gige/BaslerGigECamera.h>
+
 using namespace Pylon;
-// Namespace for using cout.
-// using namespace std;
-// Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 10;
+using namespace GenApi;
+// using namespace cv;
+using namespace std;
+using namespace Basler_GigECameraParams;
+
+static const uint32_t nbBuffers = 20;
+
 
 
 #ifndef VDATA_NO_QT
@@ -54,192 +74,85 @@ class CaptureBasler : public QObject, public CaptureInterface
 class CaptureBasler : public CaptureInterface
 #endif
 {
-#ifndef VDATA_NO_QT
-  Q_OBJECT
-   public slots: 
-   void changed(VarType * group); 
+  #ifndef VDATA_NO_QT
+    Q_OBJECT
+     public slots: 
+     void changed(VarType * group); 
+    protected:
+    QMutex mutex;
+    public:
+  #endif
+
   protected:
-  QMutex mutex;
-  public:
-#endif
+    bool is_capturing;
+    RawImage result;
+    FrameLimiter limit;
+    //processing variables:
+    VarStringEnum * v_colorout;
 
-protected:
-  bool is_capturing;
-  RawImage result;
-  FrameLimiter limit;
-  //processing variables:
-  VarStringEnum * v_colorout;
+    VarList * capture_settings;
+    VarList * conversion_settings;
 
-  VarList * capture_settings;
-  VarList * conversion_settings;
+    VarInt * v_width;
+    VarInt * v_height;
+    VarDouble * v_framerate;
+    VarBool * v_test_image;
 
-  VarInt * v_width;
-  VarInt * v_height;
-  VarDouble * v_framerate;
-  VarBool * v_test_image;
+    VarInt* v_expose_us;
+    VarBool* v_expose_overlapped;
+    VarDouble* v_gain_db;
+    VarStringEnum* v_hdr_mode;
+    VarBool* v_mirror_top_down;
+    VarBool* v_mirror_left_right;
+    VarDouble* v_wb_red;
+    VarDouble* v_wb_green;
+    VarDouble* v_wb_blue;
+    VarBool* v_sharpen;
+    VarDouble* v_gamma;
+    VarStringEnum* v_color_twist_mode;
+    VarInt    * v_aoi_width;
+    VarInt    * v_aoi_height;
+    VarInt    * v_aoi_left;
+    VarInt    * v_aoi_top;
+    VarStringEnum* v_pixel_clock;
+    
+    //capture variables:
+    VarInt    * v_cam_bus;
+    // VarStringEnum * v_colorout;
+    
+    VarList * dcam_parameters;
+    // VarList * capture_settings;
 
-  // enum HDRMode
-  // {
-  //   HDR_MODE_OFF,
-  //   HDR_MODE_FIXED0,
-  //   HDR_MODE_FIXED1,
-  //   HDR_MODE_FIXED2,
-  //   HDR_MODE_FIXED3,
-  //   HDR_MODE_FIXED4,
-  //   HDR_MODE_FIXED5,
-  // };
-  
-  // static HDRMode stringToHdrMode(const char* s)
-  // {
-  //   if (strcmp(s,"Off")==0) {
-  //     return HDR_MODE_OFF;
-  //   } else if (strcmp(s,"Fixed0")==0) {
-  //     return HDR_MODE_FIXED0;
-  //   } else if (strcmp(s,"Fixed1")==0) {
-  //     return HDR_MODE_FIXED1;
-  //   } else if (strcmp(s,"Fixed2")==0) {
-  //     return HDR_MODE_FIXED2;
-  //   } else if (strcmp(s,"Fixed3")==0) {
-  //     return HDR_MODE_FIXED3;
-  //   } else if (strcmp(s,"Fixed4")==0) {
-  //     return HDR_MODE_FIXED4;
-  //   } else if (strcmp(s,"Fixed5")==0) {
-  //     return HDR_MODE_FIXED5;
-  //   } else {
-  //     return HDR_MODE_OFF;
-  //   }
-  // }
-  
-  // static string hdrModeToString(HDRMode mode)
-  // {
-  //   switch(mode)
-  //   {
-  //     case HDR_MODE_FIXED0: return "Fixed0";
-  //     case HDR_MODE_FIXED1: return "Fixed1";
-  //     case HDR_MODE_FIXED2: return "Fixed2";
-  //     case HDR_MODE_FIXED3: return "Fixed3";
-  //     case HDR_MODE_FIXED4: return "Fixed4";
-  //     case HDR_MODE_FIXED5: return "Fixed5";
-  //     default: return "Off";
-  //   }
-  // }
-  
-  // enum ColorTwistMode
-  // {
-  //   COLOR_TWIST_MODE_OFF,
-  //   COLOR_TWIST_MODE_ADOBERGB_D50,
-  //   COLOR_TWIST_MODE_SRGB_D50,
-  //   COLOR_TWIST_MODE_WIDE_GAMUT_RGB_D50,
-  //   COLOR_TWIST_MODE_ADOBERGB_D65,
-  //   COLOR_TWIST_MODE_SRGB_D65,
-  // };
-  
-  // static ColorTwistMode stringToColorTwistMode(const char* s)
-  // {
-  //     if (strcmp(s,"Off")==0) {
-  //     return COLOR_TWIST_MODE_OFF;
-  //   } else if (strcmp(s,"AdobeRGB_D50")==0) {
-  //     return COLOR_TWIST_MODE_ADOBERGB_D50;
-  //   } else if (strcmp(s,"sRGB_D50")==0) {
-  //     return COLOR_TWIST_MODE_SRGB_D50;
-  //   } else if (strcmp(s,"WideGamutRGB_D50")==0) {
-  //     return COLOR_TWIST_MODE_WIDE_GAMUT_RGB_D50;
-  //   } else if (strcmp(s,"AdobeRGB_D65")==0) {
-  //     return COLOR_TWIST_MODE_ADOBERGB_D65;
-  //   } else if (strcmp(s,"sRGB_D65")==0) {
-  //     return COLOR_TWIST_MODE_SRGB_D65;
-  //   } else {
-  //     return COLOR_TWIST_MODE_OFF;
-  //   }
-  // }
-  
-  // static string colorTwistModeToString(ColorTwistMode mode)
-  // {
-  //   switch(mode)
-  //   {
-  //     case COLOR_TWIST_MODE_ADOBERGB_D50: return "AdobeRGB_D50";
-  //     case COLOR_TWIST_MODE_SRGB_D50: return "sRGB_D50";
-  //     case COLOR_TWIST_MODE_WIDE_GAMUT_RGB_D50: return "WideGamutRGB_D50";
-  //     case COLOR_TWIST_MODE_ADOBERGB_D65: return "AdobeRGB_D65";
-  //     case COLOR_TWIST_MODE_SRGB_D65: return "sRGB_D65";
-  //     default: return "Off";
-  //   }
-  // }
+    // Automagically call PylonInitialize and PylonTerminate to ensure the pylon runtime system
+    // is initialized during the lifetime of this object.
+    Pylon::PylonAutoInitTerm                autoInitTerm;
 
-
-  // static TCameraPixelClock stringToPixelClock(const char* s)
-  // {
-  //   if (strcmp(s,"8MHz")==0) {
-  //     return cpc8000KHz;
-  //   } else if (strcmp(s,"10MHz")==0) {
-  //     return cpc10000KHz;
-  //   } else if (strcmp(s,"12MHz")==0) {
-  //     return cpc12000KHz;
-  //   } else if (strcmp(s,"20MHz")==0) {
-  //     return cpc20000KHz;
-  //   } else if (strcmp(s,"24MHz")==0) {
-  //     return cpc24000KHz;
-  //   } else if (strcmp(s,"27MHz")==0) {
-  //     return cpc27000KHz;
-  //   } else if (strcmp(s,"32MHz")==0) {
-  //     return cpc32000KHz;
-  //   } else if (strcmp(s,"40MHz")==0) {
-  //     return cpc40000KHz;
-  //   } else {
-  //     return cpc6000KHz;
-  //   }
-  // }
-
-  // static string pixelClockToString(TCameraPixelClock pxc)
-  // {
-  //   switch(pxc)
-  //   {
-  //     case cpc8000KHz: return "8MHz";
-  //     case cpc10000KHz: return "10MHz";
-  //     case cpc12000KHz: return "12MHz";
-  //     case cpc20000KHz: return "20MHz";
-  //     case cpc24000KHz: return "24MHz";
-  //     case cpc27000KHz: return "27MHz";
-  //     case cpc32000KHz: return "32MHz";
-  //     case cpc40000KHz: return "40MHz";
-  //     default: return "6MHz";
-  //   }
-  // }
-   // bool is_capturing;
-
-  //DCAM parameters:
-  VarInt* v_expose_us;
-  VarBool* v_expose_overlapped;
-  VarDouble* v_gain_db;
-  VarStringEnum* v_hdr_mode;
-  VarBool* v_mirror_top_down;
-  VarBool* v_mirror_left_right;
-  VarDouble* v_wb_red;
-  VarDouble* v_wb_green;
-  VarDouble* v_wb_blue;
-  VarBool* v_sharpen;
-  VarDouble* v_gamma;
-  VarStringEnum* v_color_twist_mode;
-  VarInt    * v_aoi_width;
-  VarInt    * v_aoi_height;
-  VarInt    * v_aoi_left;
-  VarInt    * v_aoi_top;
-  VarStringEnum* v_pixel_clock;
-  
-  //capture variables:
-  VarInt    * v_cam_bus;
-  // VarStringEnum * v_colorout;
-  
-  VarList * dcam_parameters;
-  // VarList * capture_settings;
+    // uint8_t*                                ppBuffersUC[nbBuffers];         // Buffer for the grabbed images in 8 bits format.
+    // uint16_t*                               ppBuffersUS[nbBuffers];         // Buffer for the grabbed images in 16 bits format.
+    // StreamBufferHandle                      handles[nbBuffers];
+    // CTlFactory                              *pTlFactory;
+    // ITransportLayer                         *pTl;                    // Pointer on the transport layer.
+    // CBaslerGigECamera                       *pCamera;                       // Pointer on basler camera.
+    // CBaslerGigECamera::StreamGrabber_t      *pStreamGrabber;
+    // DeviceInfoList_t                        devices;
+    // // GrabResult                              result;
+    // bool                                    connectionStatus;
+    // int                                     mFrameCounter;
+    // //Camera.h
+    // bool                mExposureAvailable;
+    // bool                mGainAvailable;
+    // bool                mCamSizeToMax;
+    // int                 mCamSizeWidth;
+    // int                 mCamSizeHeight;
+    // bool                mVerbose;
   
 public:
-#ifndef VDATA_NO_QT
-  CaptureBasler(VarList * _settings, int default_camera_id=0, QObject * parent=0);
-  void mvc_connect(VarList * group);
-#else
-  CaptureBasler(VarList * _settings, int default_camera_id=0);
-#endif
+  #ifndef VDATA_NO_QT
+    CaptureBasler(VarList * _settings, int default_camera_id=0, QObject * parent=0);
+    void mvc_connect(VarList * group);
+  #else
+    CaptureBasler(VarList * _settings, int default_camera_id=0);
+  #endif
   ~CaptureBasler();
     
   virtual bool startCapture();

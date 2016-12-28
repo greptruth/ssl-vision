@@ -94,6 +94,7 @@ CaptureThread::~CaptureThread()
   delete captureV4L;
   delete captureFiles;
   delete captureGenerator;
+  delete captureBasler;
   delete counter;
   
 #ifdef MVIMPACT

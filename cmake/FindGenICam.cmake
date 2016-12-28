@@ -1,7 +1,7 @@
 INCLUDE(FindPackageHandleStandardArgs)
 
-FIND_LIBRARY(GENICAM_LIBRARY_2_3 GenApi_gcc40_v2_3
-  /opt/pylon4/genicam/bin/Linux32_i86
+FIND_LIBRARY(GENICAM_LIBRARY_2_3 NAMES GenApi_gcc40_v2_3 GCBase_gcc40_v2_3 Log_gcc40_v2_3
+  PATHS /opt/pylon4/genicam/bin/Linux32_i86 /opt/pylon4/genicam/bin/Linux32_i86 /opt/pylon4/genicam/bin/Linux32_i86
 )
 
 FIND_LIBRARY(GENICAM_LIBRARY_1_1 genicam_api

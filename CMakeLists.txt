@@ -44,8 +44,8 @@ IF(BASLER_PYLON_FOUND)
   	message(STATUS "Basler and Genicam found" ${GENICAM_INCLUDE_PATH} ${GENICAM_LIBRARY})
   	include_directories(${BASLER_PYLON_INCLUDE_PATH} ${GENICAM_INCLUDE_PATH})
   	add_definitions(-D BASLER_PYLON)
-  	set (SHARED_SRCS ${SHARED_SRCS} ${shared_dir}/capture/capture_basler.cpp)
-  	set (SHARED_HEADERS ${SHARED_HEADERS} ${shared_dir}/capture/capture_basler.h)
+  	#set (SHARED_SRCS ${SHARED_SRCS} ${shared_dir}/capture/capture_basler.cpp)
+  	#set (SHARED_HEADERS ${SHARED_HEADERS} ${shared_dir}/capture/capture_basler.h)
     #set(all_backends ${all_backends} basler_pylon)
   ELSE(GENICAM_FOUND)
     message(STATUS "Basler found, but GenICam not found?!")
@@ -224,22 +224,11 @@ set (libs ${QT_LIBRARIES}
 	${DC1394_LIBRARIES}
 	${mvIMPACT_LIBRARIES}
 	${OpenCV_LIBS}
-	#${BASLER_PYLON_LIBRARIES}
-	#${GENICAM_LIBRARIES}
+	${BASLER_PYLON_LIBRARY}
+	${GENICAM_LIBRARY}
 	sslvision
 )
-set (slibs ${QT_LIBRARIES}
-	${CMAKE_THREAD_LIBS_INIT}
-	${OPENGL_gl_LIBRARY}
-	${OPENGL_glu_LIBRARY}
-	${PROTOBUF_LIBRARIES}
-	${DC1394_LIBRARIES}
-	${mvIMPACT_LIBRARIES}
-	${OpenCV_LIBS}
-	${BASLER_PYLON_LIBRARIES}
-	${GENICAM_LIBRARIES}
-	sslvision
-)
+
 ## build the main app
 set (target vision)
 add_executable(${target} ${UI_SRCS} ${MOC_SRCS} ${RC_SRCS} ${SRCS})
