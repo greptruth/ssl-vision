@@ -28,6 +28,7 @@
 #include "framecounter.h"
 #include "framelimiter.h"
 #include "image.h"
+#include <limits>
 #ifndef VDATA_NO_QT
   #include <QMutex>
 #else
@@ -136,6 +137,7 @@ class CaptureBasler : public CaptureInterface
     CBaslerGigECamera::StreamGrabber_t      *pStreamGrabber;
     DeviceInfoList_t                        devices;
     IPylonDevice                            *pDevice;
+    CGrabResultPtr                          ptrGrabResult;
     // //GrabResult                              result;
     bool                                    connectionStatus;
     int                                     mFrameCounter;
@@ -157,6 +159,7 @@ class CaptureBasler : public CaptureInterface
     CEnumerationPtr       gainAuto;
 
     unsigned int cam_id;
+    ColorFormat capture_format;
 public:
   #ifndef VDATA_NO_QT
     CaptureBasler(VarList * _settings, int default_camera_id=0, QObject * parent=0);

@@ -43,8 +43,8 @@ CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id) : Cap
   //=======================CAPTURE SETTINGS==========================
   capture_settings->addChild(v_cam_bus          = new VarInt("cam idx",default_camera_id));
   capture_settings->addChild(v_colorout         = new VarStringEnum("color mode", Colors::colorFormatToString(COLOR_YUV422_UYVY)));
-  v_colorout->addItem(Colors::colorFormatToString(COLOR_YUV422_UYVY));
   v_colorout->addItem(Colors::colorFormatToString(COLOR_RGB8));
+  v_colorout->addItem(Colors::colorFormatToString(COLOR_MONO8));
   capture_settings->addChild ( v_framerate = new VarDouble ( "Framerate (FPS)", 60.0 ) );
   capture_settings->addChild ( v_width = new VarInt ( "Width (pixels)", 780 ) );
   capture_settings->addChild ( v_height = new VarInt ( "Height (pixels)", 580 ) );
@@ -606,22 +606,53 @@ void CaptureBasler::writeParameterValues(VarList * item)
 
 CaptureBasler::~CaptureBasler()
 {
-  // if(pStreamGrabber != NULL){
-  //       delete pStreamGrabber;
-  //   }
+  if(pStreamGrabber != NULL){
+        delete pStreamGrabber;
+    }
 
-  //   if(pCamera != NULL) {
-  //       if(pCamera->IsOpen()) pCamera->Close();
-  //       delete pCamera;
-  //   }
+    if(pCamera != NULL) {
+        if(pCamera->IsOpen()) pCamera->Close();
+        delete pCamera;
+    }
 
-  //   if(pTlFactory != NULL)
-  //       pTlFactory->ReleaseTl(pTl);
+    if(pTlFactory != NULL)
+        pTlFactory->ReleaseTl(pTl);
 }
 
 bool CaptureBasler::stopCapture()
 {
-  cleanup();
+  if (isCapturing())
+  {
+    readAllParameterValues();
+    
+    //Need to release pointers here?
+    // IPylonDevice->DestroyDevice(pDevice);
+    // IPylonDevice->DestroyDevice(pCamera);
+    // // ReleaseTl(pTl);
+    // pTlFactory->ReleaseTl(pTl);
+    
+    try
+    {
+      pCamera->Close();
+    }
+    catch(GenICam::GenericException &e)
+    {
+      fprintf(stderr, "BaslerPylon: An error occurred while closing the camera:  '%s')\n", e.GetDescription());
+      return false;
+    }
+    
+    is_capturing = false;
+  }
+  is_capturing = true;
+
+  vector<VarType *> tmp = capture_settings->getChildren();
+  for (unsigned int i=0; i < tmp.size();i++)
+  {
+    tmp[i]->removeFlags( VARTYPE_FLAG_READONLY );
+  }
+  
+  dcam_parameters->addFlags( VARTYPE_FLAG_HIDE_CHILDREN );
+  
   return true;
 }
 
@@ -689,7 +720,7 @@ bool CaptureBasler::startCapture()
     offsetX = pControl->GetNode("OffsetX");
     offsetY = pControl->GetNode("OffsetY");
     pixelFormat = pControl->GetNode( "PixelFormat");
-    // gainAuto( pControl.GetNode( "GainAuto"));
+    gainAuto = pControl->GetNode( "GainAuto");
     // Maximize the Image AOI.
     if (IsWritable(offsetX))
     {
@@ -701,10 +732,23 @@ bool CaptureBasler::startCapture()
     }
     width->SetValue(width->GetMax());
     height->SetValue(height->GetMax());
-    if ( IsAvailable( pixelFormat->GetEntryByName( "Mono8")))
+
+    ColorFormat out_color = Colors::stringToColorFormat(v_colorout->getSelection().c_str());
+    if(out_color == COLOR_RGB8)
     {
-        pixelFormat->FromString( "Mono8");
-        cout << "New PixelFormat  : " << pixelFormat->ToString() << endl;
+      if ( IsAvailable( pixelFormat->GetEntryByName( "BGR8Packed")))// Or RGB8Packed??
+      {
+          pixelFormat->FromString( "BGR8Packed");
+          cout << "New PixelFormat  : " << pixelFormat->ToString() << endl;
+      }
+    }
+    else if(out_color == COLOR_MONO8)
+    {
+      if ( IsAvailable( pixelFormat->GetEntryByName( "Mono8")))// Or RGB8Packed??
+      {
+          pixelFormat->FromString( "Mono8");
+          cout << "New PixelFormat  : " << pixelFormat->ToString() << endl;
+      }
     }
     if ( IsWritable( gainAuto))
     {
@@ -756,43 +800,43 @@ bool CaptureBasler::startCapture()
         // This smart pointer will receive the grab result data.
         // CGrabResultPtr ptrGrabResult;
 
-        // Grab c_countOfImagesToGrab from the cameras.
-//         for( int i = 0; i < c_countOfImagesToGrab && cameras.IsGrabbing(); ++i)
-//         {
-//             cameras.RetrieveResult( 5000, ptrGrabResult, TimeoutHandling_ThrowException);
+  //         // Grab c_countOfImagesToGrab from the cameras.
+  //         for( int i = 0; i < c_countOfImagesToGrab && cameras.IsGrabbing(); ++i)
+  //         {
+  //             cameras.RetrieveResult( 5000, ptrGrabResult, TimeoutHandling_ThrowException);
 
-//             // When the cameras in the array are created the camera context value
-//             // is set to the index of the camera in the array.
-//             // The camera context is a user settable value.
-//             // This value is attached to each grab result and can be used
-//             // to determine the camera that produced the grab result.
-//             intptr_t cameraContextValue = ptrGrabResult->GetCameraContext();
+  //             // When the cameras in the array are created the camera context value
+  //             // is set to the index of the camera in the array.
+  //             // The camera context is a user settable value.
+  //             // This value is attached to each grab result and can be used
+  //             // to determine the camera that produced the grab result.
+  //             intptr_t cameraContextValue = ptrGrabResult->GetCameraContext();
 
-// #ifdef PYLON_WIN_BUILD
-//             // Show the image acquired by each camera in the window related to each camera.
-//             Pylon::DisplayImage(cameraContextValue, ptrGrabResult);
-// #endif
+  // #ifdef PYLON_WIN_BUILD
+  //             // Show the image acquired by each camera in the window related to each camera.
+  //             Pylon::DisplayImage(cameraContextValue, ptrGrabResult);
+  // #endif
 
-//             // Print the index and the model name of the camera.
-//             cout << "Camera " <<  cameraContextValue << ": " << cameras[ cameraContextValue ].GetDeviceInfo().GetModelName() << endl;
+  //             // Print the index and the model name of the camera.
+  //             cout << "Camera " <<  cameraContextValue << ": " << cameras[ cameraContextValue ].GetDeviceInfo().GetModelName() << endl;
 
-//             // Now, the image data can be processed.
-//             cout << "GrabSucceeded: " << ptrGrabResult->GrabSucceeded() << endl;
-//             cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
-//             cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
-//             const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
-//             cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
-//         }
-//     }
-//     catch (GenICam::GenericException &e)
-//     {
-//         // Error handling
-//         cerr << "An exception occurred." << endl
-//         << e.GetDescription() << endl;
-//         exitCode = 1;
-//     }
+  //             // Now, the image data can be processed.
+  //             cout << "GrabSucceeded: " << ptrGrabResult->GrabSucceeded() << endl;
+  //             cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
+  //             cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
+  //             const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
+  //             cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
+  //         }
+  //     }
+  //     catch (GenICam::GenericException &e)
+  //     {
+  //         // Error handling
+  //         cerr << "An exception occurred." << endl
+  //         << e.GetDescription() << endl;
+  //         exitCode = 1;
+  //     }
 
-      
+        
   #ifndef VDATA_NO_QT
     mutex.unlock();
   #endif
@@ -846,51 +890,33 @@ RawImage CaptureBasler::getFrame()
   #ifndef VDATA_NO_QT
     mutex.lock();
   #endif
-    // limit.waitForNextFrame();
-    // result.setColorFormat ( COLOR_RGB8 );
-    // result.setTime ( GetTimeSec() );
-    // result.allocate ( COLOR_RGB8,v_width->getInt(),v_height->getInt() );
-    // rgbImage img;
-    // img.fromRawImage(result);
+    RawImage result;
+    result.setColorFormat(capture_format);
+    result.setWidth(0);
+    result.setHeight(0);
+    result.setTime(0.0);
+    result.setData(0);
 
-    // if (v_test_image->getBool()) {
-    //   int w = result.getWidth();
-    //   int h = result.getHeight();
-    //   int n_colors = 8;
-    //   int slice_width = w/n_colors;
-    //   rgb color=RGB::Black;
-    //   rgb color2;
-    //   for (int x = 0 ; x < w; x++) {
-    //     int c_idx= x/slice_width;
-    //     if (c_idx==0) {
-    //       color=RGB::White;
-    //     } else if (c_idx==1) {
-    //       color=RGB::Red;
-    //     } else if (c_idx==2) {
-    //       color=RGB::Green;
-    //     } else if (c_idx==3) {
-    //       color=RGB::Blue;
-    //     } else if (c_idx==4) {
-    //       color=RGB::Cyan;
-    //     } else if (c_idx==5) {
-    //       color=RGB::Pink;
-    //     } else if (c_idx==6) {
-    //       color=RGB::Yellow;
-    //     } else if (c_idx==7) {
-    //       color=RGB::Black;
-    //     }
-    //     for (int y = 0 ; y < h; y++) {
-    //       color2.r= max(0,min(255,((int)color.r * (h-1-y))/h));
-    //       color2.g= max(0,min(255,((int)color.g * (h-1-y))/h));
-    //       color2.b= max(0,min(255,((int)color.b * (h-1-y))/h));
-    //       img.setPixel(x,y,color2);
-    //     }
-    //   }
-    // } else {
-    //   img.fillBlack();
-    // }
+    CGrabResultPtr ptrGrabResult;
+    pCamera->GrabOne(std::numeric_limits<unsigned int>::infinity() , ptrGrabResult , TimeoutHandling_ThrowException);
 
-
+    if(!ptrGrabResult->GrabSucceeded())
+    {
+      cerr<< "BaslerPylon GrabOne failed:" << ptrGrabResult->GetErrorCode() << ptrGrabResult->GetErrorDescription() << endl;
+      // fprintf(stderr, "BaslerPylon GrabOne failed: (%d, %s)\n", ptrGrabResult->GetErrorCode(), ptrGrabResult->GetErrorDescription());
+      #ifndef VDATA_NO_QT
+        mutex.unlock();
+      #endif
+      return result;
+    }
+    timeval tv;
+    gettimeofday(&tv,NULL);
+    result.setTime((double)tv.tv_sec + tv.tv_usec*(1.0E-6));
+    result.setWidth(ptrGrabResult->GetWidth());
+    result.setHeight(ptrGrabResult->GetHeight());
+    ColorFormat out_color = Colors::stringToColorFormat(v_colorout->getSelection().c_str());
+    result.setColorFormat(out_color);
+    result.setData((unsigned char*)ptrGrabResult->GetBuffer());
   #ifndef VDATA_NO_QT
     mutex.unlock();
   #endif
@@ -902,7 +928,8 @@ void CaptureBasler::releaseFrame()
   #ifndef VDATA_NO_QT
     mutex.lock();
   #endif
-      //TODO release frame here
+    //TODO release frame here
+    ptrGrabResult.Release();
   #ifndef VDATA_NO_QT
     mutex.unlock();
   #endif
