@@ -177,6 +177,7 @@ public:
   virtual void releaseFrame();
    
   void cleanup();
+  virtual bool resetBus();
 
   void readParameterValues(VarList * item);
 

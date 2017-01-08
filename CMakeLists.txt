@@ -73,6 +73,11 @@ FIND_LIBRARY(BASLER_PYLON5_LIBRARY log4cpp_gcc40_v2_3  /opt/pylon4/genicam/bin/L
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON5 DEFAULT_MSG
                                              GENICAM_INCLUDE_PATH
                                              BASLER_PYLON5_LIBRARY)
+FIND_LIBRARY(BASLER_PYLON6_LIBRARY Xerces-C_gcc40_v2_7_1  /opt/pylon4/genicam/bin/Linux32_i86/GenApi/Generic)
+
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON6 DEFAULT_MSG
+                                             BASLER_PYLON6_INCLUDE_PATH
+                                             BASLER_PYLON6_LIBRARY)                                             
 
 find_package(mvIMPACT QUIET)
 
@@ -251,6 +256,7 @@ set (libs ${QT_LIBRARIES}
 	${BASLER_PYLON3_LIBRARY}
 	${BASLER_PYLON4_LIBRARY}
 	${BASLER_PYLON5_LIBRARY}
+	${BASLER_PYLON6_LIBRARY}
 	sslvision
 )
 
