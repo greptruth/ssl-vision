@@ -736,8 +736,9 @@ bool CaptureBasler::startCapture()
       #endif
       return false;
     }
+    
     cout << "Using device " << pCamera->GetDeviceInfo().GetFullName() << "for cam_id:"<< cam_id << endl;
-    pCamera->MaxNumBuffer = 5;
+    // pCamera->MaxNumBuffer = 5;
     // capture_format = Colors::stringToColorFormat(v_colormode->getString().c_str());
 
     pControl = &pCamera->GetNodeMap();
@@ -780,30 +781,31 @@ bool CaptureBasler::startCapture()
     {
         gainAuto->FromString("Off");
     }
+    // pCamera->StartGrabbing(GrabStrategy_OneByOne);
     is_capturing=true;
 
-    if(pCamera == NULL) {
-        printf("pCamera is NULL\n");
-        // return result;
-    }
+    // if(pCamera == NULL) {
+    //     printf("pCamera is NULL\n");
+    //     // return result;
+    // }
 
-    if(pCamera->IsOpen())
-      {printf("Open status: true\n");}
-    else
-      printf("Open status: false\n");
-    if(pCamera->IsGrabbing())
-      {printf("Grabbing status: true\n");}
-    else
-      printf("Grabbing status: false\n");
-    printf("Going to GrabOne\n");
-    pCamera->GrabOne(500 , ptrGrabResult , TimeoutHandling_Return);
-    printf("Done: GrabOne\n");
-    if(!ptrGrabResult->GrabSucceeded())
-    {
-      cerr<< "BaslerPylon GrabOne failed:" << ptrGrabResult->GetErrorCode() << ptrGrabResult->GetErrorDescription() << endl;
-      // fprintf(stderr, "BaslerPylon GrabOne failed: (%d, %s)\n", ptrGrabResult->GetErrorCode(), ptrGrabResult->GetErrorDescription());
-      // return result;
-    }
+    // if(pCamera->IsOpen())
+    //   {printf("Open status: true\n");}
+    // else
+    //   printf("Open status: false\n");
+    // if(pCamera->IsGrabbing())
+    //   {printf("Grabbing status: true\n");}
+    // else
+    //   printf("Grabbing status: false\n");
+    // printf("Going to GrabOne\n");
+    // pCamera->GrabOne(500 , ptrGrabResult , TimeoutHandling_Return);
+    // printf("Done: GrabOne\n");
+    // if(!ptrGrabResult->GrabSucceeded())
+    // {
+    //   cerr<< "BaslerPylon GrabOne failed:" << ptrGrabResult->GetErrorCode() << ptrGrabResult->GetErrorDescription() << endl;
+    //   // fprintf(stderr, "BaslerPylon GrabOne failed: (%d, %s)\n", ptrGrabResult->GetErrorCode(), ptrGrabResult->GetErrorDescription());
+    //   // return result;
+    // }
     // FOR: non auto gain setting
     // if ( camera.GetSfncVersion() >= Sfnc_2_0_0)
     // {
@@ -899,38 +901,39 @@ bool CaptureBasler::startCapture()
 }
 bool CaptureBasler::copyAndConvertFrame ( const RawImage & src, RawImage & target )
 {
+  printf("Eneter: copyAndConvertFrame\n");
   #ifndef VDATA_NO_QT
     mutex.lock();
   #endif
-  //   ColorFormat output_fmt = Colors::stringToColorFormat ( v_colorout->getSelection().c_str() );
-  //   ColorFormat src_fmt=src.getColorFormat();
-
-  //   if ( target.getData() ==0 ) {
-  //     target.allocate ( output_fmt, src.getWidth(), src.getHeight() );
-  //   } else {
-  //     target.ensure_allocation ( output_fmt, src.getWidth(), src.getHeight() );
-  //   }
-  //   target.setTime ( src.getTime() );
-
-  //   if ( output_fmt == src_fmt ) {
-  //     if ( src.getData() != 0 ) memcpy ( target.getData(),src.getData(),src.getNumBytes() );
-  //   } else if ( src_fmt == COLOR_RGB8 && output_fmt == COLOR_YUV422_UYVY ) {
-  //     if ( src.getData() != 0 ) {
-  //       dc1394_convert_to_YUV422 ( src.getData(), target.getData(), src.getWidth(), src.getHeight(),
-  //                                  DC1394_BYTE_ORDER_UYVY, DC1394_COLOR_CODING_RGB8, 8 );
-  //     }
-  //   } else {
-  //     fprintf ( stderr,"Cannot copy and convert frame...unknown conversion selected from: %s to %s\n",
-  //               Colors::colorFormatToString ( src_fmt ).c_str(),
-  //               Colors::colorFormatToString ( output_fmt ).c_str() );
-  // #ifndef VDATA_NO_QT
-  //     mutex.unlock();
-  // #endif
-  //     return false;
-  //   }
+    ColorFormat src_fmt = src.getColorFormat();
+  
+  if(target.getData() == 0)
+  {
+    //allocate target, if it does not exist yet
+    target.allocate(src_fmt, src.getWidth(), src.getHeight());
+  } 
+  else
+  {
+    target.ensure_allocation(src_fmt, src.getWidth(), src.getHeight());
+  }
+  target.setTime(src.getTime());
+  
+  if(src.getColorFormat() == COLOR_RGB8)
+  {
+    memcpy(target.getData(),src.getData(),src.getNumBytes());
+  }
+  else
+  {
+    for(int i = 0; i < src.getNumBytes(); i += 2)
+    {
+      target.getData()[i+1] = src.getData()[i];
+      target.getData()[i] = src.getData()[i+1];
+    }
+  }
   #ifndef VDATA_NO_QT
     mutex.unlock();
   #endif
+  printf("Exit: copyAndConvertFrame\n");
     return true;
 }
 
@@ -963,9 +966,19 @@ RawImage CaptureBasler::getFrame()
     else
       printf("Grabbing status: false\n");
     printf("Going to GrabOne\n");
-    pCamera->GrabOne(500 , ptrGrabResult , TimeoutHandling_Return);
+    // if ( pCamera->WaitForFrameTriggerReady( 1000, TimeoutHandling_Return))
+    // {
+    //     pCamera->ExecuteSoftwareTrigger();
+    // }
+    // pCamera->ExecuteSoftwareTrigger();
+    // pCamera->RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return);
+    pCamera->GrabOne(5000 , ptrGrabResult , TimeoutHandling_Return);
     printf("Done: GrabOne\n");
-    if(!ptrGrabResult->GrabSucceeded())
+    if(ptrGrabResult->GrabSucceeded())
+    {
+      printf("Grab successful\n");
+    }
+    else
     {
       cerr<< "BaslerPylon GrabOne failed:" << ptrGrabResult->GetErrorCode() << ptrGrabResult->GetErrorDescription() << endl;
       // fprintf(stderr, "BaslerPylon GrabOne failed: (%d, %s)\n", ptrGrabResult->GetErrorCode(), ptrGrabResult->GetErrorDescription());
@@ -981,7 +994,7 @@ RawImage CaptureBasler::getFrame()
     result.setWidth(ptrGrabResult->GetWidth());
     printf("HERE::: 2\n");
     result.setHeight(ptrGrabResult->GetHeight());
-    cout<<"Colorout"<<v_colorout->getSelection().c_str()<<endl;
+    cout<<"Colorout"<<Colors::stringToColorFormat(v_colorout->getSelection().c_str())<<endl;
     printf("HERE::: 3\n");
     ColorFormat out_color = Colors::stringToColorFormat(v_colorout->getSelection().c_str());
     result.setColorFormat(out_color);
