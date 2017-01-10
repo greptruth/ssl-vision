@@ -1,25 +1,14 @@
 INCLUDE(FindPackageHandleStandardArgs)
 
-FIND_LIBRARY(GENICAM_LIBRARY_2_3 NAMES GenApi_gcc40_v2_3 GCBase_gcc40_v2_3 Log_gcc40_v2_3
-  PATHS /opt/pylon4/genicam/bin/Linux32_i86 /opt/pylon4/genicam/bin/Linux32_i86 /opt/pylon4/genicam/bin/Linux32_i86
+FIND_LIBRARY(GENICAM_LIBRARY_3_0 GenApi_gcc_v3_0_Basler_pylon_v5_0
+  /opt/pylon5/lib
 )
 
-FIND_LIBRARY(GENICAM_LIBRARY_1_1 genicam_api
-  /opt/pylon4/lib
-)
-
-IF (GENICAM_LIBRARY_1_1 OR GENICAM_LIBRARY_2_3)
-  IF(GENICAM_LIBRARY_2_3)
-    SET(GENICAM_LIBRARY ${GENICAM_LIBRARY_2_3})
-  ELSE(GENICAM_LIBRARY_2_1)
-    SET(GENICAM_LIBRARY ${GENICAM_LIBRARY_1_1})
-  ENDIF(GENICAM_LIBRARY_2_3)
-ENDIF (GENICAM_LIBRARY_1_1 OR GENICAM_LIBRARY_2_3)
+SET(GENICAM_LIBRARY ${GENICAM_LIBRARY_3_0})
 
 FIND_PATH(GENICAM_INCLUDE_PATH GenICamVersion.h
   "$ENV{GENICAM_INCLUDE_PATH}"
-  /opt/pylon4/genicam/library/CPP/include
-  /opt/pylon4/include/genicam
+  /opt/pylon5/include/
 )
 
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(GENICAM DEFAULT_MSG

@@ -53,31 +53,17 @@ IF(BASLER_PYLON_FOUND)
     message(STATUS "Basler found, but GenICam not found?!")
   ENDIF(GENICAM_FOUND)
 ENDIF(BASLER_PYLON_FOUND)
-FIND_LIBRARY(BASLER_PYLON2_LIBRARY GCBase_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
+
+FIND_LIBRARY(BASLER_PYLON2_LIBRARY GCBase_gcc_v3_0_Basler_pylon_v5_0  /opt/pylon5/lib)
 
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON2 DEFAULT_MSG
                                              GENICAM_INCLUDE_PATH
                                              BASLER_PYLON2_LIBRARY)
-FIND_LIBRARY(BASLER_PYLON3_LIBRARY Log_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
+FIND_LIBRARY(BASLER_PYLON3_LIBRARY pylonutility-5.0.5  /opt/pylon5/lib)
 
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON3 DEFAULT_MSG
-                                             GENICAM_INCLUDE_PATH
-                                             BASLER_PYLON3_LIBRARY)
-FIND_LIBRARY(BASLER_PYLON4_LIBRARY MathParser_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
-
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON4 DEFAULT_MSG
-                                             GENICAM_INCLUDE_PATH
-                                             BASLER_PYLON4_LIBRARY)
-FIND_LIBRARY(BASLER_PYLON5_LIBRARY log4cpp_gcc40_v2_3  /opt/pylon4/genicam/bin/Linux32_i86)
-
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON5 DEFAULT_MSG
-                                             GENICAM_INCLUDE_PATH
-                                             BASLER_PYLON5_LIBRARY)
-FIND_LIBRARY(BASLER_PYLON6_LIBRARY Xerces-C_gcc40_v2_7_1  /opt/pylon4/genicam/bin/Linux32_i86/GenApi/Generic)
-
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(BASLER_PYLON6 DEFAULT_MSG
-                                             BASLER_PYLON6_INCLUDE_PATH
-                                             BASLER_PYLON6_LIBRARY)                                             
+											 GENICAM_INCLUDE_PATH
+                                             BASLER_PYLON3_LIBRARY)                                           
 
 find_package(mvIMPACT QUIET)
 
@@ -110,9 +96,9 @@ include_directories(${PROJECT_SOURCE_DIR}/src/app/gui)
 include_directories(${PROJECT_SOURCE_DIR}/src/app/plugins)
 include_directories(${PROJECT_SOURCE_DIR}/src/app/stacks)
 include_directories($(PYLON_ROOT)/include)
-include_directories($(PYLON_GENICAM_ROOT)/library/CPP/include)
-include_directories($(PYLON_ROOT)/lib)
-include_directories($(PYLON_GENICAM_ROOT)/library/CPP/lib/Linux32_i86)
+#include_directories($(PYLON_GENICAM_ROOT)/library/CPP/include)
+#include_directories($(PYLON_ROOT)/lib)
+#include_directories($(PYLON_GENICAM_ROOT)/library/CPP/lib/Linux32_i86)
 
 set (SRCS
 	src/app/capture_thread.cpp
@@ -254,9 +240,6 @@ set (libs ${QT_LIBRARIES}
 	${BASLER_PYLON_LIBRARY}
 	${BASLER_PYLON2_LIBRARY}
 	${BASLER_PYLON3_LIBRARY}
-	${BASLER_PYLON4_LIBRARY}
-	${BASLER_PYLON5_LIBRARY}
-	${BASLER_PYLON6_LIBRARY}
 	sslvision
 )
 

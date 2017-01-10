@@ -29,6 +29,7 @@ CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id, QObje
 CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id) : CaptureInterface ( _settings )
 #endif
 {
+  printf("Enter: CaptureBasler\n");
   is_capturing=false;
 
   // settings->addChild ( conversion_settings = new VarList ( "Conversion Settings" ) );
@@ -81,6 +82,7 @@ CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id) : Cap
   // dcam_parameters->addChild(v_color_twist_mode);
   // Pylon::PylonAutoInitTerm                autoInitTerm;
   //Camera
+  // PylonInitialize();
   pCamera = NULL;
   pStreamGrabber = NULL;
   connectionStatus = false;
@@ -650,10 +652,10 @@ bool CaptureBasler::stopCapture()
   {
     readAllParameterValues();
     
-    //Need to release pointers here?
+    // Need to release pointers here?
     // IPylonDevice->DestroyDevice(pDevice);
     // IPylonDevice->DestroyDevice(pCamera);
-    // // ReleaseTl(pTl);
+    // ReleaseTl(pTl);
     // pTlFactory->ReleaseTl(pTl);
     
     try
@@ -781,7 +783,7 @@ bool CaptureBasler::startCapture()
     {
         gainAuto->FromString("Off");
     }
-    // pCamera->StartGrabbing(GrabStrategy_OneByOne);
+    pCamera->StartGrabbing(GrabStrategy_OneByOne);
     is_capturing=true;
 
     // if(pCamera == NULL) {
@@ -966,13 +968,16 @@ RawImage CaptureBasler::getFrame()
     else
       printf("Grabbing status: false\n");
     printf("Going to GrabOne\n");
-    // if ( pCamera->WaitForFrameTriggerReady( 1000, TimeoutHandling_Return))
-    // {
-    //     pCamera->ExecuteSoftwareTrigger();
-    // }
+    if ( pCamera->WaitForFrameTriggerReady( 1000, TimeoutHandling_Return))
+    {
+        printf("OOOOO: inside loop\n");
+        pCamera->ExecuteSoftwareTrigger();
+        printf("OOOOO: Executed Software Trigger\n");
+    }
     // pCamera->ExecuteSoftwareTrigger();
-    // pCamera->RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return);
-    pCamera->GrabOne(5000 , ptrGrabResult , TimeoutHandling_Return);
+    printf("OOOOO: Going to retrieve image rn\n");
+    pCamera->RetrieveResult(1000, ptrGrabResult, TimeoutHandling_Return);
+    // pCamera->GrabOne(5000 , ptrGrabResult , TimeoutHandling_Return);
     printf("Done: GrabOne\n");
     if(ptrGrabResult->GrabSucceeded())
     {
