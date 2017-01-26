@@ -29,12 +29,28 @@ CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id, QObje
 CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id) : CaptureInterface ( _settings )
 #endif
 {
+  printf("^^^^^^^^^^^^^^^^^^^^^\n");
+  try{
+    converter.OutputPixelFormat =  PixelType_RGB8packed;
+  }
+ catch (const GenericException &e)
+  {
+      // Error handling.
+      cerr << "An exception occurred." << endl << e.GetDescription() << endl;
+      // exitCode = 1;
+  }
+
+  
   printf("Enter: CaptureBasler\n");
   is_capturing=false;
 
-  // settings->addChild ( conversion_settings = new VarList ( "Conversion Settings" ) );
+  settings->addChild ( conversion_settings = new VarList ( "Conversion Settings" ) );
   settings->addChild ( capture_settings = new VarList ( "Capture Settings" ) );
   settings->addChild(dcam_parameters  = new VarList("Camera Parameters"));
+
+  conversion_settings->addChild(v_colorout=new VarStringEnum("convert to mode",Colors::colorFormatToString(COLOR_RGBA8)));
+  v_colorout->addItem(Colors::colorFormatToString(COLOR_RGB8));
+  // v_colorout->addItem(Colors::colorFormatToString(COLOR_YUV422_UYVY));
 
   //=======================CONVERSION SETTINGS=======================
   // conversion_settings->addChild ( v_colorout=new VarStringEnum ( "convert to mode",Colors::colorFormatToString ( COLOR_YUV422_UYVY ) ) );
@@ -53,9 +69,10 @@ CaptureBasler::CaptureBasler ( VarList * _settings, int default_camera_id) : Cap
   // v_colormode->addItem(Colors::colorFormatToString(COLOR_YUV422_UYVY));
   // v_colormode->addItem(Colors::colorFormatToString(COLOR_YUV444));
   capture_settings->addChild(v_cam_bus          = new VarInt("cam idx",default_camera_id));
-  capture_settings->addChild(v_colorout         = new VarStringEnum("color mode", Colors::colorFormatToString(COLOR_YUV422_UYVY)));
-  v_colorout->addItem(Colors::colorFormatToString(COLOR_RGB8));
+  capture_settings->addChild(v_colorout         = new VarStringEnum("color mode", Colors::colorFormatToString(COLOR_MONO8)));
   v_colorout->addItem(Colors::colorFormatToString(COLOR_MONO8));
+  // v_colorout->addItem(Colors::colorFormatToString(CO));
+  capture_settings->removeChild(v_colorout);
   capture_settings->addChild ( v_framerate = new VarDouble ( "Framerate (FPS)", 60.0 ) );
   capture_settings->addChild ( v_width = new VarInt ( "Width (pixels)", 780 ) );
   capture_settings->addChild ( v_height = new VarInt ( "Height (pixels)", 580 ) );
@@ -618,7 +635,7 @@ void CaptureBasler::writeParameterValues(VarList * item)
 
 CaptureBasler::~CaptureBasler()
 {
-  printf("Enter: ~CaptureBasler\n");
+  // printf("Enter: ~CaptureBasler\n");
   if(pStreamGrabber != NULL){
         delete pStreamGrabber;
     }
@@ -630,7 +647,7 @@ CaptureBasler::~CaptureBasler()
 
     if(pTlFactory != NULL)
         pTlFactory->ReleaseTl(pTl);
-  printf("Exit: ~CaptureBasler\n");
+  // printf("Exit: ~CaptureBasler\n");
 }
 bool CaptureBasler::resetBus()
 {
@@ -647,7 +664,7 @@ bool CaptureBasler::resetBus()
 
 bool CaptureBasler::stopCapture()
 {
-  printf("Enter: stopCapture\n");
+  // printf("Enter: stopCapture\n");
   if (isCapturing())
   {
     readAllParameterValues();
@@ -695,7 +712,7 @@ void CaptureBasler::cleanup()
 
 bool CaptureBasler::startCapture()
 {
-  printf("Enter: startCapture\n");
+  // printf("Enter: startCapture\n");
   #ifndef VDATA_NO_QT
     mutex.lock();
   #endif
@@ -740,7 +757,7 @@ bool CaptureBasler::startCapture()
     }
     
     cout << "Using device " << pCamera->GetDeviceInfo().GetFullName() << "for cam_id:"<< cam_id << endl;
-    // pCamera->MaxNumBuffer = 5;
+    pCamera->MaxNumBuffer = 5;
     // capture_format = Colors::stringToColorFormat(v_colormode->getString().c_str());
 
     pControl = &pCamera->GetNodeMap();
@@ -761,29 +778,22 @@ bool CaptureBasler::startCapture()
     }
     width->SetValue(width->GetMax());
     height->SetValue(height->GetMax());
-
-    ColorFormat out_color = Colors::stringToColorFormat(v_colorout->getSelection().c_str());
-    if(out_color == COLOR_RGB8)
-    {
-      if ( IsAvailable( pixelFormat->GetEntryByName( "BGR8Packed")))// Or RGB8Packed??
-      {
-          pixelFormat->FromString( "BGR8Packed");
-          cout << "New PixelFormat  : " << pixelFormat->ToString() << endl;
-      }
-    }
-    else if(out_color == COLOR_MONO8)
+    // ColorFormat out_color = Colors::stringToColorFormat(v_colorout->getSelection().c_str());
+    if(true)
     {
       if ( IsAvailable( pixelFormat->GetEntryByName( "Mono8")))// Or RGB8Packed??
       {
           pixelFormat->FromString( "Mono8");
-          cout << "New PixelFormat  : " << pixelFormat->ToString() << endl;
+          // cout << "New PixelFormat  : " << pixelFormat->ToString() << endl;
       }
     }
     if ( IsWritable( gainAuto))
     {
         gainAuto->FromString("Off");
     }
-    pCamera->StartGrabbing(GrabStrategy_OneByOne);
+    // cout<< "*******************************************\n";
+
+    pCamera->StartGrabbing();
     is_capturing=true;
 
     // if(pCamera == NULL) {
@@ -903,12 +913,14 @@ bool CaptureBasler::startCapture()
 }
 bool CaptureBasler::copyAndConvertFrame ( const RawImage & src, RawImage & target )
 {
-  printf("Eneter: copyAndConvertFrame\n");
+  // printf("Enter: copyAndConvertFrame\n");
   #ifndef VDATA_NO_QT
     mutex.lock();
   #endif
+    // return false;
+    // printf("CCF: 1\n");
     ColorFormat src_fmt = src.getColorFormat();
-  
+  // printf("CCF: 2\n");
   if(target.getData() == 0)
   {
     //allocate target, if it does not exist yet
@@ -918,70 +930,99 @@ bool CaptureBasler::copyAndConvertFrame ( const RawImage & src, RawImage & targe
   {
     target.ensure_allocation(src_fmt, src.getWidth(), src.getHeight());
   }
+  // printf("CCF: 3\n");
   target.setTime(src.getTime());
-  
-  if(src.getColorFormat() == COLOR_RGB8)
-  {
-    memcpy(target.getData(),src.getData(),src.getNumBytes());
-  }
-  else
-  {
-    for(int i = 0; i < src.getNumBytes(); i += 2)
-    {
-      target.getData()[i+1] = src.getData()[i];
-      target.getData()[i] = src.getData()[i+1];
-    }
-  }
+  // printf("CCF: 4\n");
+  // cout<<src_fmt<<endl;
+  memcpy(target.getData(),src.getData(),src.getNumBytes());
+
+  // if(src.getColorFormat() == COLOR_RGB8)
+  // {
+  //   printf("CCF: 4.1\n");
+  //   src.getNumBytes();
+  //   src.getData();
+  //   target.getData();
+  //   printf("YOLO\n");
+  //   memcpy(target.getData(),src.getData(),src.getNumBytes());
+  //   printf("CCF: 4.2\n");
+  // }
+  // else
+  // {
+  //   printf("CCF: 4.3\n");
+  //   for(int i = 0; i < src.getNumBytes(); i += 2)
+  //   {
+  //     target.getData()[i+1] = src.getData()[i];
+  //     target.getData()[i] = src.getData()[i+1];
+  //     // printf("CCF: 4.4\n");
+  //   }
+  // }
+  // printf("CCF: 5\n");
   #ifndef VDATA_NO_QT
     mutex.unlock();
   #endif
-  printf("Exit: copyAndConvertFrame\n");
+  // printf("Exit: copyAndConvertFrame\n");
     return true;
 }
 
 RawImage CaptureBasler::getFrame()
 {
-  printf("Enetered getFrame\n");
+  // printf("Enetered getFrame\n");
   #ifndef VDATA_NO_QT
     mutex.lock();
   #endif
-    printf("Enetered getFrame mutexlock\n");
+    // printf("Enetered getFrame mutexlock\n");
     RawImage result;
-    result.setColorFormat(capture_format);
+    result.setColorFormat(COLOR_RGB8);
     result.setWidth(0);
     result.setHeight(0);
     result.setTime(0.0);
     result.setData(0);
-    printf("RawImage result crossed\n");
+    // Create a target image.
+    
+    
+    // printf("RawImage result crossed\n");
     // CGrabResultPtr ptrGrabResult;
     if(pCamera == NULL) {
-        printf("pCamera is NULL\n");
+        // printf("pCamera is NULL\n");
         return result;
     }
 
-    if(pCamera->IsOpen())
+   /* if(pCamera->IsOpen())
       {printf("Open status: true\n");}
     else
       printf("Open status: false\n");
     if(pCamera->IsGrabbing())
       {printf("Grabbing status: true\n");}
     else
-      printf("Grabbing status: false\n");
-    printf("Going to GrabOne\n");
-    if ( pCamera->WaitForFrameTriggerReady( 1000, TimeoutHandling_Return))
-    {
-        printf("OOOOO: inside loop\n");
-        pCamera->ExecuteSoftwareTrigger();
-        printf("OOOOO: Executed Software Trigger\n");
+      printf("Grabbing status: false\n");*/
+    // printf("Going to GrabOne\n");
+    
+    try{
+
+      // if ( pCamera->WaitForFrameTriggerReady(50, TimeoutHandling_Return))
+      // {
+      //     // printf("OOOOO: inside loop\n");
+      //     pCamera->ExecuteSoftwareTrigger();
+      //     // printf("OOOOO: Executed Software Trigger\n");
+      // }
+      // // pCamera->ExecuteSoftwareTrigger();
+      // // printf("OOOOO: Going to retrieve image rn\n");
+      pCamera->RetrieveResult(50, ptrGrabResult, TimeoutHandling_Return);
+      
+      // pCamera->GrabOne(25, ptrGrabResult , TimeoutHandling_Return);
+
     }
-    // pCamera->ExecuteSoftwareTrigger();
-    printf("OOOOO: Going to retrieve image rn\n");
-    pCamera->RetrieveResult(1000, ptrGrabResult, TimeoutHandling_Return);
-    // pCamera->GrabOne(5000 , ptrGrabResult , TimeoutHandling_Return);
-    printf("Done: GrabOne\n");
+    catch (const GenericException &e)
+    {
+        // Error handling.
+        cerr << "An exception occurred." << e.GetDescription() << endl;
+        return result;
+        // exitCode = 1;
+    }
+    // printf("Done: GrabOne\n");
     if(ptrGrabResult->GrabSucceeded())
     {
-      printf("Grab successful\n");
+      // printf("Grab successful\n");
     }
     else
     {
@@ -992,23 +1033,24 @@ RawImage CaptureBasler::getFrame()
       #endif
       return result;
     }
+    converter.Convert( targetImage, ptrGrabResult);
     timeval tv;
     gettimeofday(&tv,NULL);
     result.setTime((double)tv.tv_sec + tv.tv_usec*(1.0E-6));
-    printf("HERE::: 1\n");
+    // printf("HERE::: 1\n");
     result.setWidth(ptrGrabResult->GetWidth());
-    printf("HERE::: 2\n");
+    // printf("HERE::: 2\n");
     result.setHeight(ptrGrabResult->GetHeight());
-    cout<<"Colorout"<<Colors::stringToColorFormat(v_colorout->getSelection().c_str())<<endl;
-    printf("HERE::: 3\n");
+    // cout<<"Colorout"<<Colors::stringToColorFormat(v_colorout->getSelection().c_str())<<endl;
+    // printf("HERE::: 3\n");
     ColorFormat out_color = Colors::stringToColorFormat(v_colorout->getSelection().c_str());
-    result.setColorFormat(out_color);
-    printf("HERE::: 4\n");
-    result.setData((unsigned char*)ptrGrabResult->GetBuffer());
+    result.setColorFormat(COLOR_RGB8);
+    // printf("HERE::: 4\n");
+    result.setData((unsigned char*)targetImage.GetBuffer());
   #ifndef VDATA_NO_QT
     mutex.unlock();
   #endif
-    printf("Exit: getFrame\n");
+    // printf("Exit: getFrame\n");
     return result;
 }
 

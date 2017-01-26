@@ -56,6 +56,9 @@
 // #include <pylon/PylonIncludes.h>
 #include <pylon/gige/BaslerGigEInstantCamera.h>
 #include <pylon/gige/BaslerGigECamera.h>
+#include <pylon/PylonImage.h>
+#include <pylon/Pixel.h>
+#include <pylon/ImageFormatConverter.h>
 
 using namespace Pylon;
 using namespace GenApi;
@@ -127,6 +130,9 @@ class CaptureBasler : public CaptureInterface
     // Automagically call PylonInitialize and PylonTerminate to ensure the pylon runtime system
     // is initialized during the lifetime of this object.
     Pylon::PylonAutoInitTerm                autoInitTerm;
+    CPylonImage targetImage;
+  
+    CImageFormatConverter converter;
 
     uint8_t*                                ppBuffersUC[nbBuffers];         // Buffer for the grabbed images in 8 bits format.
     uint16_t*                               ppBuffersUS[nbBuffers];         // Buffer for the grabbed images in 16 bits format.
@@ -138,6 +144,7 @@ class CaptureBasler : public CaptureInterface
     DeviceInfoList_t                        devices;
     IPylonDevice                            *pDevice;
     CGrabResultPtr                          ptrGrabResult;
+    void*                                   ptrCvt;
     // //GrabResult                              result;
     bool                                    connectionStatus;
     int                                     mFrameCounter;
